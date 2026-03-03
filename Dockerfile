@@ -1,12 +1,12 @@
-CMD ["gunicorn", "--bind", "0.0.0.0:4000", "--workers", "2", "--timeout", "120", "app:app"]
-```
+FROM python:3.11-slim
 
-Also add `package.json` to your `.dockerignore` so Docker doesn't get confused:
-```
-package.json
-package-lock.json
-node_modules/
-venv/
-__pycache__/
-android/
-www/
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 4000
+
+CMD ["gunicorn", "--bind", "0.0.0.0:4000", "--workers", "2", "--timeout", "120", "app:app"]
