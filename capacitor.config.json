@@ -1,0 +1,9 @@
+{
+  "appId": "com.swimtracker.app",
+  "appName": "Swim Tracker",
+  "webDir": "www",
+  "server": {
+    "url": "https://vedant.projectsample.online",
+    "cleartext": false
+  }
+}

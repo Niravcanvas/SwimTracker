@@ -1,167 +1,464 @@
 {% extends "base.html" %}
-{% block title %}Ranking{% endblock %}
+{% block title %}Ranking – Swim Tracker{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* ── Page Header ── */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem; font-weight: 800;
+    color: var(--text-1); margin: 0 0 5px;
+  }
+  .page-sub { font-size: 13.5px; color: var(--text-3); margin: 0; }
+
+  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn-action {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 9px;
+    font-size: 13px; font-weight: 500; text-decoration: none;
+    border: 1px solid var(--border); background: var(--navy-2);
+    color: var(--text-2); transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-action:hover { color: var(--text-1); border-color: rgba(255,255,255,0.14); background: var(--navy-3); }
+  .btn-action svg { width: 14px; height: 14px; }
+
+  .btn-action-teal {
+    background: var(--teal-glow); color: var(--teal);
+    border-color: rgba(0,194,168,0.3);
+  }
+  .btn-action-teal:hover { background: rgba(0,194,168,0.25); color: var(--teal); }
+
+  /* ── Stat Cards ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.35s 0.05s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @media (max-width: 767px) { .stats-grid { grid-template-columns: 1fr; } }
+  @media (min-width: 576px) and (max-width: 767px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
+
+  .stat-card {
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 24px;
+  }
+
+  .stat-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .stat-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-3); margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem; font-weight: 800;
+    color: var(--text-1); line-height: 1;
+  }
+  .stat-value-sm {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem; font-weight: 700;
+    color: var(--text-1); line-height: 1.3;
+  }
+  .stat-hint { font-size: 12px; color: var(--text-3); margin-top: 6px; }
+
+  .stat-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .stat-icon svg { width: 17px; height: 17px; }
+  .icon-teal { background: var(--teal-glow); border: 1px solid rgba(0,194,168,0.2); }
+  .icon-teal svg { color: var(--teal); }
+  .icon-gold { background: rgba(245,197,66,0.1); border: 1px solid rgba(245,197,66,0.2); }
+  .icon-gold svg { color: var(--gold); }
+
+  /* Search card */
+  .search-wrap { position: relative; }
+  .search-icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    display: flex; pointer-events: none; color: var(--text-3);
+  }
+  .search-icon svg { width: 15px; height: 15px; }
+  .search-input {
+    width: 100%;
+    background: var(--navy-3);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text-1);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    padding: 9px 14px 9px 36px;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  .search-input::placeholder { color: var(--text-3); }
+  .search-input:focus {
+    border-color: rgba(0,194,168,0.4);
+    box-shadow: 0 0 0 3px rgba(0,194,168,0.08);
+  }
+
+  /* ── Table Card ── */
+  .table-card {
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: fadeUp 0.4s 0.1s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  .table-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 20px 24px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    color: var(--text-1); margin: 0 0 3px;
+  }
+  .table-card-sub { font-size: 12px; color: var(--text-3); margin: 0; }
+
+  .leaderboard-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border-radius: 50px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: var(--teal-glow); color: var(--teal);
+    border: 1px solid rgba(0,194,168,0.25);
+  }
+  .leaderboard-tag svg { width: 12px; height: 12px; }
+
+  /* Table */
+  .rank-table { width: 100%; border-collapse: collapse; }
+  .rank-table thead tr {
+    border-bottom: 1px solid var(--border);
+  }
+  .rank-table thead th {
+    padding: 11px 16px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-3);
+    background: rgba(255,255,255,0.02);
+    white-space: nowrap;
+  }
+  .rank-table thead th:last-child { text-align: right; }
+
+  .rank-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .rank-table tbody tr:last-child { border-bottom: none; }
+  .rank-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+  .rank-table td {
+    padding: 14px 16px;
+    font-size: 13.5px;
+    color: var(--text-1);
+    vertical-align: middle;
+  }
+
+  /* Rank badge */
+  .rank-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 7px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px; font-weight: 700;
+  }
+  .rank-badge svg { width: 13px; height: 13px; }
+  .rank-1 { background: rgba(245,197,66,0.15); color: var(--gold); border: 1px solid rgba(245,197,66,0.3); }
+  .rank-2 { background: rgba(180,180,210,0.12); color: #b4c2d8; border: 1px solid rgba(180,180,210,0.25); }
+  .rank-3 { background: rgba(200,140,90,0.12); color: #e0a96d; border: 1px solid rgba(200,140,90,0.25); }
+  .rank-n { background: var(--navy-3); color: var(--text-3); border: 1px solid var(--border); }
+
+  /* Swimmer name */
+  .swimmer-name { font-weight: 600; color: var(--text-1); margin-bottom: 2px; }
+  .swimmer-role { font-size: 11px; color: var(--text-3); }
+
+  /* Level badge */
+  .level-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 50px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .level-badge svg { width: 11px; height: 11px; }
+  .level-adv  { background: rgba(0,194,168,0.1); color: var(--teal); border: 1px solid rgba(0,194,168,0.2); }
+  .level-beg  { background: rgba(100,150,255,0.1); color: #7aabff; border: 1px solid rgba(100,150,255,0.2); }
+
+  /* Medals */
+  .medals-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 50px;
+    background: rgba(245,197,66,0.08); color: var(--gold);
+    border: 1px solid rgba(245,197,66,0.2);
+    font-size: 12px; font-weight: 600;
+  }
+  .medals-chip svg { width: 12px; height: 12px; }
+
+  /* Distance */
+  .dist-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--text-1); text-align: right;
+  }
+  .dist-unit { font-size: 11px; color: var(--text-3); font-weight: 400; }
+
+  /* Best time */
+  .time-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 600; color: var(--teal);
+  }
+
+  /* Empty state */
+  .empty-state {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--text-3);
+  }
+  .empty-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: var(--navy-3); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+  }
+  .empty-icon svg { width: 22px; height: 22px; color: var(--text-3); }
+  .empty-title { font-size: 14px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+  .empty-sub   { font-size: 13px; color: var(--text-3); }
+
+  /* Footer note */
+  .table-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-3);
+  }
+  .table-footer svg { width: 13px; height: 13px; flex-shrink: 0; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+
+<!-- ── Header ── -->
+<div class="page-header">
   <div>
-    <h2 class="fw-bold mb-1">📋 Ranking List</h2>
-    <p class="text-muted mb-0">Ranked by total distance. Best time included.</p>
+    <h1 class="page-title">Ranking List</h1>
+    <p class="page-sub">Ranked by total distance — best time included.</p>
   </div>
-
-  <div class="d-flex gap-2 flex-wrap">
-    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('coach_dashboard') }}">← Coach</a>
-    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('compare') }}">🆚 Compare</a>
-  </div>
-</div>
-
-<!-- Summary -->
-<div class="row g-3 mb-3">
-  <div class="col-md-4">
-    <div class="card glass border-0 shadow-sm h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <div class="text-muted small">Total Swimmers</div>
-            <div class="display-6 fw-bold mb-0">{{ rows|length }}</div>
-          </div>
-          <div class="stat-icon">👥</div>
-        </div>
-        <div class="text-muted small mt-2">Count based on available ranking rows.</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-4">
-    <div class="card glass border-0 shadow-sm h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <div class="text-muted small">Top Swimmer</div>
-            {% if rows|length > 0 %}
-              <div class="fw-bold">{{ rows[0].name }}</div>
-              <div class="text-muted small">Distance: {{ "%.0f"|format(rows[0].total_dist) }} m</div>
-            {% else %}
-              <div class="text-muted">—</div>
-            {% endif %}
-          </div>
-          <div class="stat-icon">🏆</div>
-        </div>
-        <div class="text-muted small mt-2">Based on total distance.</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-4">
-    <div class="card glass border-0 shadow-sm h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div class="w-100">
-            <div class="text-muted small">Search</div>
-            <div class="input-group input-group-sm mt-2">
-              <span class="input-group-text">🔎</span>
-              <input id="rankSearch" class="form-control" placeholder="Search swimmer name..." oninput="filterRanks()">
-            </div>
-          </div>
-          <div class="stat-icon ms-2">⚡</div>
-        </div>
-        <div class="text-muted small mt-2">Filters table instantly.</div>
-      </div>
-    </div>
+  <div class="header-actions">
+    <a class="btn-action" href="{{ url_for('coach_dashboard') }}">
+      <i data-lucide="arrow-left"></i> Coach
+    </a>
+    <a class="btn-action btn-action-teal" href="{{ url_for('compare') }}">
+      <i data-lucide="git-compare-arrows"></i> Compare
+    </a>
   </div>
 </div>
 
-<!-- Ranking Table -->
-<div class="card glass border-0 shadow-sm">
-  <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+<!-- ── Stat Cards ── -->
+<div class="stats-grid">
+
+  <!-- Total Swimmers -->
+  <div class="stat-card">
+    <div class="stat-top">
+      <div>
+        <div class="stat-label">Total Swimmers</div>
+        <div class="stat-value">{{ rows|length }}</div>
+      </div>
+      <div class="stat-icon icon-teal">
+        <i data-lucide="users"></i>
+      </div>
+    </div>
+    <div class="stat-hint">Count based on available ranking rows.</div>
+  </div>
+
+  <!-- Top Swimmer -->
+  <div class="stat-card">
+    <div class="stat-top">
+      <div>
+        <div class="stat-label">Top Swimmer</div>
+        {% if rows|length > 0 %}
+          <div class="stat-value-sm">{{ rows[0].name }}</div>
+          <div class="stat-hint" style="margin-top:4px;">
+            {{ "%.0f"|format(rows[0].total_dist) }} m total distance
+          </div>
+        {% else %}
+          <div class="stat-value-sm" style="color:var(--text-3);">—</div>
+        {% endif %}
+      </div>
+      <div class="stat-icon icon-gold">
+        <i data-lucide="trophy"></i>
+      </div>
+    </div>
+    <div class="stat-hint">Based on total distance.</div>
+  </div>
+
+  <!-- Search -->
+  <div class="stat-card">
+    <div class="stat-label" style="margin-bottom:10px;">Search Swimmer</div>
+    <div class="search-wrap">
+      <span class="search-icon"><i data-lucide="search"></i></span>
+      <input id="rankSearch" class="search-input"
+             type="text" placeholder="Search swimmer name…"
+             oninput="filterRanks()">
+    </div>
+    <div class="stat-hint" style="margin-top:10px;">Filters the table instantly.</div>
+  </div>
+
+</div>
+
+<!-- ── Ranking Table ── -->
+<div class="table-card">
+
+  <div class="table-card-header">
     <div>
-      <h5 class="fw-bold mb-0">🏊 Ranking Table</h5>
-      <div class="text-muted small">Top swimmers first.</div>
+      <div class="table-card-title">Ranking Table</div>
+      <div class="table-card-sub">Top swimmers first.</div>
     </div>
-    <span class="badge text-bg-light border">Distance Leaderboard</span>
+    <div class="leaderboard-tag">
+      <i data-lucide="bar-chart-2"></i>
+      Distance Leaderboard
+    </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table align-middle mb-0" id="rankTable">
-      <thead class="table-light">
+  <div style="overflow-x:auto;">
+    <table class="rank-table" id="rankTable">
+      <thead>
         <tr>
           <th style="width:90px;">Rank</th>
-          <th>Name</th>
+          <th>Swimmer</th>
           <th style="width:140px;">Level</th>
           <th style="width:120px;">Medals</th>
-          <th class="text-end" style="width:170px;">Total Distance</th>
+          <th style="width:170px; text-align:right;">Total Distance</th>
           <th style="width:140px;">Best Time</th>
         </tr>
       </thead>
-
       <tbody>
-      {% if rows|length == 0 %}
-        <tr>
-          <td colspan="6" class="text-center text-muted py-5">
-            No ranking data yet. Ask swimmers to add swim records.
-          </td>
-        </tr>
-      {% else %}
-        {% for r in rows %}
-          <tr class="rank-row">
-            <td>
-              {% if r.rank == 1 %}
-                <span class="badge text-bg-warning">🏆 #1</span>
-              {% elif r.rank == 2 %}
-                <span class="badge text-bg-secondary">🥈 #2</span>
-              {% elif r.rank == 3 %}
-                <span class="badge text-bg-dark">🥉 #3</span>
-              {% else %}
-                <span class="badge text-bg-light border">#{{ r.rank }}</span>
-              {% endif %}
-            </td>
-
-            <td>
-              <div class="fw-semibold rank-name">{{ r.name }}</div>
-              <div class="text-muted small">Swimmer</div>
-            </td>
-
-            <td>
-              {% if r.level == "ADVANCED" %}
-                <span class="badge text-bg-success">ADVANCED</span>
-              {% else %}
-                <span class="badge text-bg-primary-subtle border">BEGINNER</span>
-              {% endif %}
-            </td>
-
-            <td>
-              <span class="badge text-bg-light border">{{ r.medals }} 🥇</span>
-            </td>
-
-            <td class="text-end fw-semibold">
-              {{ "%.0f"|format(r.total_dist) }} m
-            </td>
-
-            <td class="fw-semibold">
-              {{ r.best_time }}
+        {% if rows|length == 0 %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <div class="empty-icon"><i data-lucide="users"></i></div>
+                <div class="empty-title">No ranking data yet</div>
+                <div class="empty-sub">Ask swimmers to add swim records to populate this table.</div>
+              </div>
             </td>
           </tr>
-        {% endfor %}
-      {% endif %}
+        {% else %}
+          {% for r in rows %}
+            <tr class="rank-row">
+
+              <!-- Rank -->
+              <td>
+                {% if r.rank == 1 %}
+                  <span class="rank-badge rank-1">
+                    <i data-lucide="trophy"></i> #1
+                  </span>
+                {% elif r.rank == 2 %}
+                  <span class="rank-badge rank-2">
+                    <i data-lucide="medal"></i> #2
+                  </span>
+                {% elif r.rank == 3 %}
+                  <span class="rank-badge rank-3">
+                    <i data-lucide="medal"></i> #3
+                  </span>
+                {% else %}
+                  <span class="rank-badge rank-n">#{{ r.rank }}</span>
+                {% endif %}
+              </td>
+
+              <!-- Swimmer -->
+              <td>
+                <div class="swimmer-name rank-name">{{ r.name }}</div>
+                <div class="swimmer-role">Swimmer</div>
+              </td>
+
+              <!-- Level -->
+              <td>
+                {% if r.level == "ADVANCED" %}
+                  <span class="level-badge level-adv">
+                    <i data-lucide="zap"></i> Advanced
+                  </span>
+                {% else %}
+                  <span class="level-badge level-beg">
+                    <i data-lucide="sprout"></i> Beginner
+                  </span>
+                {% endif %}
+              </td>
+
+              <!-- Medals -->
+              <td>
+                <span class="medals-chip">
+                  <i data-lucide="medal"></i>
+                  {{ r.medals }}
+                </span>
+              </td>
+
+              <!-- Distance -->
+              <td>
+                <div class="dist-val">
+                  {{ "%.0f"|format(r.total_dist) }} <span class="dist-unit">m</span>
+                </div>
+              </td>
+
+              <!-- Best Time -->
+              <td>
+                <span class="time-val">{{ r.best_time }}</span>
+              </td>
+
+            </tr>
+          {% endfor %}
+        {% endif %}
       </tbody>
     </table>
   </div>
 
-  <div class="card-body pt-3">
-    <div class="text-muted small">
-      Note: Ranking is based on total distance. Best time is the fastest recorded swim time.
-    </div>
+  <div class="table-footer">
+    <i data-lucide="info"></i>
+    Ranking is based on total distance. Best time is the fastest recorded swim.
   </div>
+
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-function filterRanks(){
-  const q = (document.getElementById("rankSearch")?.value || "").toLowerCase().trim();
-  document.querySelectorAll("#rankTable tbody .rank-row").forEach(row => {
-    const name = (row.querySelector(".rank-name")?.textContent || "").toLowerCase();
-    row.style.display = name.includes(q) ? "" : "none";
-  });
-}
+  lucide.createIcons();
+
+  function filterRanks() {
+    const q = (document.getElementById('rankSearch')?.value || '').toLowerCase().trim();
+    document.querySelectorAll('#rankTable tbody .rank-row').forEach(row => {
+      const name = (row.querySelector('.rank-name')?.textContent || '').toLowerCase();
+      row.style.display = name.includes(q) ? '' : 'none';
+    });
+  }
 </script>
 {% endblock %}

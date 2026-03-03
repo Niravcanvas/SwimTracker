@@ -1,18 +1,165 @@
 {% extends "base.html" %}
-{% block title %}{{ p.name }} - Player Profile{% endblock %}
+{% block title %}{{ p.name }} – Swim Tracker{% endblock %}
+
+{% block head_extra %}
+<style>
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* ── Page Header ── */
+  .page-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif; font-size: 1.5rem;
+    font-weight: 800; color: var(--text-1); margin: 0 0 5px;
+  }
+  .page-sub { font-size: 13.5px; color: var(--text-3); margin: 0; }
+  .btn-action {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 9px; font-size: 13px;
+    font-weight: 500; text-decoration: none;
+    border: 1px solid var(--border); background: var(--navy-2);
+    color: var(--text-2); transition: all 0.18s;
+  }
+  .btn-action:hover { color: var(--text-1); background: var(--navy-3); border-color: rgba(255,255,255,0.14); }
+  .btn-action svg { width: 14px; height: 14px; }
+
+  /* ── Profile Card ── */
+  .profile-card {
+    background: var(--navy-2); border: 1px solid var(--border);
+    border-radius: 20px; overflow: hidden;
+    animation: fadeUp 0.35s 0.06s cubic-bezier(0.22,1,0.36,1) both;
+    display: grid; grid-template-columns: 380px 1fr;
+  }
+  @media (max-width: 900px) { .profile-card { grid-template-columns: 1fr; } }
+
+  /* ── Photo Side ── */
+  .photo-side {
+    position: relative; min-height: 420px; overflow: hidden;
+  }
+  @media (max-width: 900px) { .photo-side { min-height: 280px; } }
+
+  .player-photo {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center top;
+    display: block;
+    transition: transform 0.6s ease;
+  }
+  .profile-card:hover .player-photo { transform: scale(1.03); }
+
+  .photo-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(8,14,31,0.92) 0%,
+      rgba(8,14,31,0.4) 50%,
+      transparent 100%
+    );
+  }
+
+  .photo-bottom {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 28px;
+    z-index: 2;
+  }
+
+  .federation-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+  .fed-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 7px;
+    font-size: 11px; font-weight: 600;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.9);
+  }
+  .fed-tag svg { width: 11px; height: 11px; }
+
+  .photo-name {
+    font-family: 'Syne', sans-serif; font-size: 1.7rem; font-weight: 800;
+    color: #fff; margin: 0 0 4px; line-height: 1.1;
+  }
+  .photo-sub { font-size: 13px; color: rgba(255,255,255,0.55); }
+
+  /* ── Details Side ── */
+  .details-side {
+    padding: 36px 36px;
+    display: flex; flex-direction: column; gap: 0;
+    border-left: 1px solid var(--border);
+  }
+  @media (max-width: 900px) {
+    .details-side { padding: 24px; border-left: none; border-top: 1px solid var(--border); }
+  }
+
+  .details-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 12px; margin-bottom: 24px;
+  }
+  .details-name {
+    font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800;
+    color: var(--text-1); margin: 0 0 5px;
+  }
+  .details-sub { font-size: 13px; color: var(--text-3); }
+
+  .pro-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 7px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    background: rgba(245,197,66,0.1); color: var(--gold);
+    border: 1px solid rgba(245,197,66,0.25); white-space: nowrap;
+  }
+  .pro-tag svg { width: 12px; height: 12px; }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+
+  .stat-block {
+    background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .stat-block.full { grid-column: 1 / -1; }
+  .stat-block-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text-3); margin-bottom: 8px;
+  }
+  .stat-block-label svg { width: 13px; height: 13px; color: var(--teal); }
+  .stat-block-value {
+    font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 800;
+    color: var(--text-1); line-height: 1.2;
+  }
+
+  /* Tip block */
+  .tip-block {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 16px 18px; border-radius: 12px;
+    background: var(--teal-glow); border: 1px solid rgba(0,194,168,0.2);
+    margin-top: auto;
+  }
+  .tip-icon {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: rgba(0,194,168,0.2); border: 1px solid rgba(0,194,168,0.25);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .tip-icon svg { width: 15px; height: 15px; color: var(--teal); }
+  .tip-title { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 3px; }
+  .tip-text  { font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-  <div>
-    <h2 class="fw-bold mb-0">🏆 Player Profile</h2>
-    <div class="text-muted small">Famous swimmers and their achievements</div>
-  </div>
-  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('players') }}">← Back to Players</a>
-</div>
 
 {% set default_img = url_for('static', filename='img/players/default_player.jpg') %}
-
-{# Build image src safely: filename / full url / /static path #}
 {% if p.photo_url %}
   {% if p.photo_url.startswith('http') %}
     {% set img_src = p.photo_url %}
@@ -25,127 +172,117 @@
   {% set img_src = default_img %}
 {% endif %}
 
-<div class="card border-0 shadow-sm overflow-hidden glass">
-  <div class="row g-0">
+<!-- ── Header ── -->
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Player Profile</h1>
+    <p class="page-sub">Famous swimmers and their achievements</p>
+  </div>
+  <a class="btn-action" href="{{ url_for('players') }}">
+    <i data-lucide="arrow-left"></i> Back to Players
+  </a>
+</div>
 
-    <!-- Image -->
-    <div class="col-md-5 position-relative" style="min-height:320px;">
-      <img
-        src="{{ img_src }}"
-        data-fallback="{{ default_img }}"
-        data-fallback-applied="0"
-        class="w-100 h-100 object-fit-cover"
-        alt="{{ p.name }}"
-        loading="eager"
-        decoding="async"
-        style="min-height:320px;"
-      >
+<!-- ── Profile Card ── -->
+<div class="profile-card">
 
-      <!-- ✅ overlay is behind text but over image nicely -->
-      <div class="player-overlay"></div>
+  <!-- Photo Side -->
+  <div class="photo-side">
+    <img
+      class="player-photo"
+      src="{{ img_src }}"
+      data-fallback="{{ default_img }}"
+      data-fallback-applied="0"
+      alt="{{ p.name }}"
+      loading="eager" decoding="async">
+    <div class="photo-overlay"></div>
+    <div class="photo-bottom">
+      <div class="federation-tags">
+        <span class="fed-tag"><i data-lucide="building-2"></i> {{ p.federation }}</span>
+        <span class="fed-tag"><i data-lucide="waves"></i> {{ p.event }}</span>
+      </div>
+      <div class="photo-name">{{ p.name }}</div>
+      <div class="photo-sub">Elite swimmer profile</div>
+    </div>
+  </div>
 
-      <div class="position-absolute bottom-0 start-0 p-4 text-white" style="z-index:2;">
-        <div class="d-flex flex-wrap gap-2 mb-2">
-          <span class="badge bg-light text-dark">{{ p.federation }}</span>
-          <span class="badge bg-light text-dark">{{ p.event }}</span>
-        </div>
-        <h3 class="fw-bold mb-0">{{ p.name }}</h3>
-        <div class="opacity-75 small">Elite swimmer profile</div>
+  <!-- Details Side -->
+  <div class="details-side">
+    <div class="details-header">
+      <div>
+        <div class="details-name">{{ p.name }}</div>
+        <div class="details-sub">{{ p.federation }} &middot; {{ p.event }}</div>
+      </div>
+      <div class="pro-tag">
+        <i data-lucide="star"></i> Professional
       </div>
     </div>
 
-    <!-- Details -->
-    <div class="col-md-7">
-      <div class="card-body p-4 p-md-5">
-
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-          <div>
-            <h4 class="fw-bold mb-1">{{ p.name }}</h4>
-            <div class="text-muted">{{ p.federation }} • {{ p.event }}</div>
-          </div>
-          <span class="badge text-bg-light border">Professional</span>
+    <div class="stats-grid">
+      <div class="stat-block">
+        <div class="stat-block-label">
+          <i data-lucide="cake"></i> Age
         </div>
+        <div class="stat-block-value">{{ p.age }}</div>
+      </div>
 
-        <div class="row g-3">
-          <div class="col-sm-6">
-            <div class="info-card">
-              <div class="info-icon">🎂</div>
-              <div>
-                <div class="text-muted small">Age</div>
-                <div class="fw-bold">{{ p.age }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-sm-6">
-            <div class="info-card">
-              <div class="info-icon">🏊</div>
-              <div>
-                <div class="text-muted small">Main Stroke</div>
-                <div class="fw-bold">{{ p.main_stroke }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12">
-            <div class="info-card">
-              <div class="info-icon">🥇</div>
-              <div>
-                <div class="text-muted small">Olympic Medals</div>
-                <div class="fw-bold">{{ p.medals }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-sm-6">
-            <div class="info-card">
-              <div class="info-icon">⏱</div>
-              <div>
-                <div class="text-muted small">Best Time</div>
-                <div class="fw-bold">{{ p.best_time }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-sm-6">
-            <div class="info-card">
-              <div class="info-icon">🌍</div>
-              <div>
-                <div class="text-muted small">World Records</div>
-                <div class="fw-bold">{{ p.world_records }}</div>
-              </div>
-            </div>
-          </div>
+      <div class="stat-block">
+        <div class="stat-block-label">
+          <i data-lucide="waves"></i> Main Stroke
         </div>
+        <div class="stat-block-value">{{ p.main_stroke }}</div>
+      </div>
 
-        <div class="mt-4 p-3 rounded-3 bg-light border">
-          <div class="fw-semibold">Tip</div>
-          <div class="text-muted small">
-            Try training the same main stroke and track your timings in the Swim Tracker.
-          </div>
+      <div class="stat-block">
+        <div class="stat-block-label">
+          <i data-lucide="medal"></i> Olympic Medals
         </div>
+        <div class="stat-block-value">{{ p.medals }}</div>
+      </div>
 
+      <div class="stat-block">
+        <div class="stat-block-label">
+          <i data-lucide="timer"></i> Best Time
+        </div>
+        <div class="stat-block-value">{{ p.best_time }}</div>
+      </div>
+
+      <div class="stat-block full">
+        <div class="stat-block-label">
+          <i data-lucide="globe-2"></i> World Records
+        </div>
+        <div class="stat-block-value">{{ p.world_records }}</div>
+      </div>
+    </div>
+
+    <div class="tip-block">
+      <div class="tip-icon"><i data-lucide="lightbulb"></i></div>
+      <div>
+        <div class="tip-title">Training Tip</div>
+        <div class="tip-text">
+          Try training the same main stroke and track your timings in the Swim Tracker.
+        </div>
       </div>
     </div>
 
   </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-// ✅ No blinking fallback: apply only once
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll("img[data-fallback]").forEach(img => {
-    img.addEventListener("error", () => {
-      const fallback = img.dataset.fallback;
-      if (!fallback) return;
+  lucide.createIcons();
 
-      if (img.dataset.fallbackApplied === "1") return;
-      img.dataset.fallbackApplied = "1";
-      img.src = fallback;
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('img[data-fallback]').forEach(img => {
+      img.addEventListener('error', () => {
+        const fallback = img.dataset.fallback;
+        if (!fallback || img.dataset.fallbackApplied === '1') return;
+        img.dataset.fallbackApplied = '1';
+        img.src = fallback;
+      });
     });
   });
-});
 </script>
 {% endblock %}

@@ -1,0 +1,26 @@
+{
+  "name": "swim_tracker",
+  "version": "1.0.0",
+  "description": "A Flask-based swim performance tracking web app with role-based access for swimmers, coaches, and admins.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Niravcanvas/SwimTracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Niravcanvas/SwimTracker/issues"
+  },
+  "homepage": "https://github.com/Niravcanvas/SwimTracker#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/cli": "^8.1.0",
+    "@capacitor/core": "^8.1.0"
+  }
+}

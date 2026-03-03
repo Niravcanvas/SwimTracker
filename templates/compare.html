@@ -1,34 +1,252 @@
 {% extends "base.html" %}
-{% block title %}Compare Swimmers{% endblock %}
+{% block title %}Compare Swimmers – Swim Tracker{% endblock %}
+
+{% block head_extra %}
+<style>
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* ── Page Header ── */
+  .page-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800;
+    color: var(--text-1); margin: 0 0 5px;
+  }
+  .page-sub { font-size: 13.5px; color: var(--text-3); margin: 0; }
+  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn-action {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 9px; font-size: 13px; font-weight: 500;
+    text-decoration: none; border: 1px solid var(--border);
+    background: var(--navy-2); color: var(--text-2);
+    transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-action:hover { color: var(--text-1); background: var(--navy-3); border-color: rgba(255,255,255,0.14); }
+  .btn-action svg { width: 14px; height: 14px; }
+  .btn-action-teal { background: var(--teal-glow); color: var(--teal); border-color: rgba(0,194,168,0.3); }
+  .btn-action-teal:hover { background: rgba(0,194,168,0.25); color: var(--teal); }
+
+  /* ── Form Card ── */
+  .form-card {
+    background: var(--navy-2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px 28px; margin-bottom: 20px;
+    animation: fadeUp 0.35s 0.05s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .form-card-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+  }
+  .form-card-title {
+    font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+    color: var(--text-1); margin: 0 0 4px;
+  }
+  .form-card-sub { font-size: 12.5px; color: var(--text-3); margin: 0; }
+  .compare-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border-radius: 50px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    background: var(--teal-glow); color: var(--teal); border: 1px solid rgba(0,194,168,0.25);
+  }
+  .compare-tag svg { width: 12px; height: 12px; }
+
+  .compare-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; }
+  @media (max-width: 600px) { .compare-form { grid-template-columns: 1fr; } }
+
+  .field-label {
+    display: block; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-3); margin-bottom: 7px;
+  }
+
+  .swimmer-label {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 7px;
+  }
+  .swimmer-label-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .dot-a { background: var(--teal); box-shadow: 0 0 6px var(--teal); }
+  .dot-b { background: #7aabff; box-shadow: 0 0 6px #7aabff; }
+  .swimmer-label span { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-3); }
+
+  .field-select {
+    width: 100%; background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-1);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    padding: 11px 14px; outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234e5878' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; background-size: 15px;
+    padding-right: 36px;
+  }
+  .field-select:focus {
+    border-color: rgba(0,194,168,0.45); box-shadow: 0 0 0 3px rgba(0,194,168,0.1);
+  }
+  .field-select option { background: #0d1530; }
+
+  .btn-compare {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 11px 22px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, var(--teal), #0099dd);
+    color: #fff; font-family: 'Syne', sans-serif;
+    font-size: 13.5px; font-weight: 700; letter-spacing: 0.03em;
+    cursor: pointer; transition: opacity 0.18s, transform 0.18s, box-shadow 0.18s;
+    box-shadow: 0 4px 18px rgba(0,194,168,0.22); white-space: nowrap;
+  }
+  .btn-compare svg { width: 15px; height: 15px; }
+  .btn-compare:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 22px rgba(0,194,168,0.32); }
+  .btn-compare:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .same-warn {
+    display: none; align-items: center; gap: 6px;
+    font-size: 12px; color: #ff6b6b;
+    margin-top: 8px; grid-column: 1 / -1;
+  }
+  .same-warn.visible { display: flex; }
+  .same-warn svg { width: 13px; height: 13px; }
+
+  /* ── Winner Chips ── */
+  .winners-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.4s 0.08s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @media (max-width: 600px) { .winners-grid { grid-template-columns: 1fr; } }
+
+  .winner-chip {
+    background: var(--navy-2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 20px;
+  }
+  .winner-chip-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text-3); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .winner-chip-label svg { width: 13px; height: 13px; }
+  .winner-chip-name {
+    font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 800;
+    color: var(--text-1); margin-bottom: 3px;
+  }
+  .winner-chip-note { font-size: 12px; color: var(--text-3); }
+  .winner-chip.gold { border-color: rgba(245,197,66,0.25); background: rgba(245,197,66,0.05); }
+  .winner-chip.gold .winner-chip-name { color: var(--gold); }
+  .winner-chip.teal { border-color: rgba(0,194,168,0.25); background: rgba(0,194,168,0.05); }
+  .winner-chip.teal .winner-chip-name { color: var(--teal); }
+
+  /* ── Compare Cards ── */
+  .compare-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    animation: fadeUp 0.45s 0.12s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @media (max-width: 700px) { .compare-grid { grid-template-columns: 1fr; } }
+
+  .compare-card {
+    background: var(--navy-2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; transition: border-color 0.2s;
+  }
+  .compare-card.winner-card {
+    border-color: rgba(245,197,66,0.35);
+    box-shadow: 0 0 0 1px rgba(245,197,66,0.1), 0 8px 28px rgba(0,0,0,0.2);
+  }
+  .compare-card.winner-time {
+    border-color: rgba(0,194,168,0.35);
+    box-shadow: 0 0 0 1px rgba(0,194,168,0.1), 0 8px 28px rgba(0,0,0,0.2);
+  }
+
+  .compare-card-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .compare-card-name {
+    font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800;
+    color: var(--text-1); margin-bottom: 3px;
+  }
+  .compare-card-role { font-size: 12px; color: var(--text-3); }
+
+  .swimmer-slot {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 7px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .slot-a { background: var(--teal-glow); color: var(--teal); border: 1px solid rgba(0,194,168,0.25); }
+  .slot-b { background: rgba(100,150,255,0.1); color: #7aabff; border: 1px solid rgba(100,150,255,0.25); }
+
+  .meta-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+  .meta-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 50px;
+    font-size: 11px; font-weight: 600;
+  }
+  .meta-tag svg { width: 11px; height: 11px; }
+  .tag-adv  { background: rgba(0,194,168,0.1); color: var(--teal); border: 1px solid rgba(0,194,168,0.2); }
+  .tag-beg  { background: rgba(100,150,255,0.1); color: #7aabff; border: 1px solid rgba(100,150,255,0.2); }
+  .tag-gold { background: rgba(245,197,66,0.1); color: var(--gold); border: 1px solid rgba(245,197,66,0.2); }
+  .tag-dark { background: var(--navy-3); color: var(--text-2); border: 1px solid var(--border); }
+
+  .stat-rows { display: flex; flex-direction: column; gap: 0; }
+  .stat-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 11px 0; border-bottom: 1px solid var(--border);
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row-label { font-size: 13px; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+  .stat-row-label svg { width: 13px; height: 13px; }
+  .stat-row-value {
+    font-family: 'Syne', sans-serif; font-size: 13.5px;
+    font-weight: 700; color: var(--text-1);
+  }
+  .stat-row-value.teal { color: var(--teal); }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
-  <div>
-    <h2 class="fw-bold mb-1">🆚 Compare Swimmers</h2>
-    <p class="text-muted mb-0">Side-by-side comparison of distance, best time, and consistency.</p>
-  </div>
 
-  <div class="d-flex gap-2 flex-wrap">
-    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('coach_dashboard') }}">← Coach</a>
-    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('coach_ranking') }}">📈 Ranking</a>
+<!-- ── Header ── -->
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Compare Swimmers</h1>
+    <p class="page-sub">Side-by-side comparison of distance, best time, and consistency.</p>
+  </div>
+  <div class="header-actions">
+    <a class="btn-action" href="{{ url_for('coach_dashboard') }}">
+      <i data-lucide="arrow-left"></i> Coach
+    </a>
+    <a class="btn-action btn-action-teal" href="{{ url_for('coach_ranking') }}">
+      <i data-lucide="bar-chart-2"></i> Ranking
+    </a>
   </div>
 </div>
 
-<!-- Compare Form -->
-<div class="card glass border-0 shadow-sm mb-3">
-  <div class="card-body">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-      <div>
-        <h5 class="fw-bold mb-0">Select swimmers</h5>
-        <div class="text-muted small">Choose two different swimmers to compare.</div>
-      </div>
-      <span class="badge text-bg-light border">Comparison</span>
+<!-- ── Form Card ── -->
+<div class="form-card">
+  <div class="form-card-header">
+    <div>
+      <div class="form-card-title">Select Swimmers</div>
+      <div class="form-card-sub">Choose two different swimmers to compare.</div>
     </div>
+    <div class="compare-tag">
+      <i data-lucide="git-compare-arrows"></i> Comparison
+    </div>
+  </div>
 
-    <form method="post" class="row g-2" onsubmit="return canSubmitCompare();">
-      <div class="col-md-5">
-        <label class="form-label small text-muted mb-1">Swimmer A</label>
-        <select id="user_a" class="form-select" name="user_a" required onchange="ensureDifferent()">
+  <form method="post" onsubmit="return canSubmitCompare();">
+    <div class="compare-form">
+      <div>
+        <div class="swimmer-label">
+          <span class="swimmer-label-dot dot-a"></span>
+          <span>Swimmer A</span>
+        </div>
+        <select id="user_a" class="field-select" name="user_a" required onchange="ensureDifferent()">
           {% for s in swimmers %}
             <option value="{{ s.user_id }}"
               {% if compare_data and compare_data.a.user_id == s.user_id %}selected{% endif %}>
@@ -38,9 +256,12 @@
         </select>
       </div>
 
-      <div class="col-md-5">
-        <label class="form-label small text-muted mb-1">Swimmer B</label>
-        <select id="user_b" class="form-select" name="user_b" required onchange="ensureDifferent()">
+      <div>
+        <div class="swimmer-label">
+          <span class="swimmer-label-dot dot-b"></span>
+          <span>Swimmer B</span>
+        </div>
+        <select id="user_b" class="field-select" name="user_b" required onchange="ensureDifferent()">
           {% for s in swimmers %}
             <option value="{{ s.user_id }}"
               {% if compare_data and compare_data.b.user_id == s.user_id %}selected{% endif %}>
@@ -50,23 +271,25 @@
         </select>
       </div>
 
-      <div class="col-md-2 d-grid align-items-end">
-        <label class="form-label small text-muted mb-1 d-none d-md-block">&nbsp;</label>
-        <button id="btnCompare" class="btn btn-primary">Compare</button>
+      <div>
+        <div class="field-label">&nbsp;</div>
+        <button id="btnCompare" class="btn-compare" type="submit">
+          <i data-lucide="git-compare-arrows"></i> Compare
+        </button>
       </div>
 
-      <div id="sameWarn" class="text-danger small mt-1 d-none">
+      <div class="same-warn" id="sameWarn">
+        <i data-lucide="circle-alert"></i>
         Please select two different swimmers.
       </div>
-    </form>
-  </div>
+    </div>
+  </form>
 </div>
 
 {% if compare_data %}
 {% set a = compare_data.a %}
 {% set b = compare_data.b %}
 
-<!-- Hidden compare meta (NO Jinja inside JS) -->
 <div id="compareMeta"
      data-a-dist="{{ a.total_dist }}"
      data-b-dist="{{ b.total_dist }}"
@@ -74,230 +297,192 @@
      data-b-best="{{ b.best_time }}">
 </div>
 
-<!-- Winner chips -->
-<div class="row g-3 mb-3">
-  <div class="col-md-6">
-    <div class="card glass border-0 shadow-sm">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-muted small">Distance Winner</div>
-            {% if a.total_dist > b.total_dist %}
-              <div class="fw-bold">🏆 {{ a.name }}</div>
-              <div class="text-muted small">Leads by {{ "%.0f"|format(a.total_dist - b.total_dist) }} m</div>
-            {% elif b.total_dist > a.total_dist %}
-              <div class="fw-bold">🏆 {{ b.name }}</div>
-              <div class="text-muted small">Leads by {{ "%.0f"|format(b.total_dist - a.total_dist) }} m</div>
-            {% else %}
-              <div class="fw-bold">🤝 Tie</div>
-              <div class="text-muted small">Same total distance</div>
-            {% endif %}
-          </div>
-          <span class="badge text-bg-light border">Total Distance</span>
-        </div>
-      </div>
+<!-- ── Winner Chips ── -->
+<div class="winners-grid">
+  <div class="winner-chip" id="distWinnerChip">
+    <div class="winner-chip-label">
+      <i data-lucide="ruler"></i> Distance Winner
     </div>
+    {% if a.total_dist > b.total_dist %}
+      <div class="winner-chip-name">{{ a.name }}</div>
+      <div class="winner-chip-note">Leads by {{ "%.0f"|format(a.total_dist - b.total_dist) }} m</div>
+    {% elif b.total_dist > a.total_dist %}
+      <div class="winner-chip-name">{{ b.name }}</div>
+      <div class="winner-chip-note">Leads by {{ "%.0f"|format(b.total_dist - a.total_dist) }} m</div>
+    {% else %}
+      <div class="winner-chip-name">Tie</div>
+      <div class="winner-chip-note">Same total distance</div>
+    {% endif %}
   </div>
 
-  <div class="col-md-6">
-    <div class="card glass border-0 shadow-sm">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-muted small">Best Time Winner</div>
-            <div class="fw-bold" id="bestTimeWinner">—</div>
-            <div class="text-muted small" id="bestTimeNote"></div>
-          </div>
-          <span class="badge text-bg-light border">Fastest</span>
-        </div>
-      </div>
+  <div class="winner-chip" id="timeWinnerChip">
+    <div class="winner-chip-label">
+      <i data-lucide="timer"></i> Best Time Winner
     </div>
+    <div class="winner-chip-name" id="bestTimeWinner">—</div>
+    <div class="winner-chip-note" id="bestTimeNote"></div>
   </div>
 </div>
 
-<!-- Compare Cards -->
-<div class="row g-3">
-  <div class="col-lg-6">
-    <div class="card glass border-0 shadow-sm h-100 compare-card" id="cardA">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <div>
-            <h5 class="fw-bold mb-0">{{ a.name }}</h5>
-            <div class="text-muted small">Swimmer A</div>
-          </div>
-          <span class="badge text-bg-light border">A</span>
-        </div>
+<!-- ── Compare Cards ── -->
+<div class="compare-grid">
 
-        <div class="d-flex gap-2 flex-wrap mb-3">
-          {% if a.level == "ADVANCED" %}
-            <span class="badge text-bg-success">ADVANCED</span>
-          {% else %}
-            <span class="badge text-bg-primary-subtle border">BEGINNER</span>
-          {% endif %}
-          <span class="badge text-bg-light border">{{ a.medals }} 🥇</span>
-          <span class="badge text-bg-light border">{{ a.swims }} swims</span>
-        </div>
-
-        <div class="list-group list-group-flush glass-list">
-          <div class="list-group-item d-flex justify-content-between">
-            <span class="text-muted">Total Distance</span>
-            <span class="fw-semibold">{{ "%.0f"|format(a.total_dist) }} m</span>
-          </div>
-          <div class="list-group-item d-flex justify-content-between">
-            <span class="text-muted">Best Time</span>
-            <span class="fw-semibold" id="aBest">{{ a.best_time }}</span>
-          </div>
-          <div class="list-group-item d-flex justify-content-between">
-            <span class="text-muted">Average Time</span>
-            <span class="fw-semibold">{{ a.avg_time }}</span>
-          </div>
-        </div>
-
+  <!-- Swimmer A -->
+  <div class="compare-card" id="cardA">
+    <div class="compare-card-header">
+      <div>
+        <div class="compare-card-name">{{ a.name }}</div>
+        <div class="compare-card-role">Swimmer A</div>
+      </div>
+      <span class="swimmer-slot slot-a">A</span>
+    </div>
+    <div class="meta-tags">
+      {% if a.level == "ADVANCED" %}
+        <span class="meta-tag tag-adv"><i data-lucide="zap"></i> Advanced</span>
+      {% else %}
+        <span class="meta-tag tag-beg"><i data-lucide="sprout"></i> Beginner</span>
+      {% endif %}
+      <span class="meta-tag tag-gold"><i data-lucide="medal"></i> {{ a.medals }} medals</span>
+      <span class="meta-tag tag-dark"><i data-lucide="waves"></i> {{ a.swims }} swims</span>
+    </div>
+    <div class="stat-rows">
+      <div class="stat-row">
+        <div class="stat-row-label"><i data-lucide="ruler"></i> Total Distance</div>
+        <div class="stat-row-value">{{ "%.0f"|format(a.total_dist) }} m</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-row-label"><i data-lucide="timer"></i> Best Time</div>
+        <div class="stat-row-value teal" id="aBest">{{ a.best_time }}</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-row-label"><i data-lucide="activity"></i> Average Time</div>
+        <div class="stat-row-value">{{ a.avg_time }}</div>
       </div>
     </div>
   </div>
 
-  <div class="col-lg-6">
-    <div class="card glass border-0 shadow-sm h-100 compare-card" id="cardB">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <div>
-            <h5 class="fw-bold mb-0">{{ b.name }}</h5>
-            <div class="text-muted small">Swimmer B</div>
-          </div>
-          <span class="badge text-bg-light border">B</span>
-        </div>
-
-        <div class="d-flex gap-2 flex-wrap mb-3">
-          {% if b.level == "ADVANCED" %}
-            <span class="badge text-bg-success">ADVANCED</span>
-          {% else %}
-            <span class="badge text-bg-primary-subtle border">BEGINNER</span>
-          {% endif %}
-          <span class="badge text-bg-light border">{{ b.medals }} 🥇</span>
-          <span class="badge text-bg-light border">{{ b.swims }} swims</span>
-        </div>
-
-        <div class="list-group list-group-flush glass-list">
-          <div class="list-group-item d-flex justify-content-between">
-            <span class="text-muted">Total Distance</span>
-            <span class="fw-semibold">{{ "%.0f"|format(b.total_dist) }} m</span>
-          </div>
-          <div class="list-group-item d-flex justify-content-between">
-            <span class="text-muted">Best Time</span>
-            <span class="fw-semibold" id="bBest">{{ b.best_time }}</span>
-          </div>
-          <div class="list-group-item d-flex justify-content-between">
-            <span class="text-muted">Average Time</span>
-            <span class="fw-semibold">{{ b.avg_time }}</span>
-          </div>
-        </div>
-
+  <!-- Swimmer B -->
+  <div class="compare-card" id="cardB">
+    <div class="compare-card-header">
+      <div>
+        <div class="compare-card-name">{{ b.name }}</div>
+        <div class="compare-card-role">Swimmer B</div>
+      </div>
+      <span class="swimmer-slot slot-b">B</span>
+    </div>
+    <div class="meta-tags">
+      {% if b.level == "ADVANCED" %}
+        <span class="meta-tag tag-adv"><i data-lucide="zap"></i> Advanced</span>
+      {% else %}
+        <span class="meta-tag tag-beg"><i data-lucide="sprout"></i> Beginner</span>
+      {% endif %}
+      <span class="meta-tag tag-gold"><i data-lucide="medal"></i> {{ b.medals }} medals</span>
+      <span class="meta-tag tag-dark"><i data-lucide="waves"></i> {{ b.swims }} swims</span>
+    </div>
+    <div class="stat-rows">
+      <div class="stat-row">
+        <div class="stat-row-label"><i data-lucide="ruler"></i> Total Distance</div>
+        <div class="stat-row-value">{{ "%.0f"|format(b.total_dist) }} m</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-row-label"><i data-lucide="timer"></i> Best Time</div>
+        <div class="stat-row-value teal" id="bBest">{{ b.best_time }}</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-row-label"><i data-lucide="activity"></i> Average Time</div>
+        <div class="stat-row-value">{{ b.avg_time }}</div>
       </div>
     </div>
   </div>
+
 </div>
 {% endif %}
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-function ensureDifferent(){
-  const a = document.getElementById("user_a");
-  const b = document.getElementById("user_b");
-  const warn = document.getElementById("sameWarn");
-  const btn = document.getElementById("btnCompare");
+  lucide.createIcons();
 
-  if (!a || !b || !warn || !btn) return;
+  function ensureDifferent() {
+    const a    = document.getElementById('user_a');
+    const b    = document.getElementById('user_b');
+    const warn = document.getElementById('sameWarn');
+    const btn  = document.getElementById('btnCompare');
+    if (!a || !b || !warn || !btn) return;
+    const same = (a.value && b.value && a.value === b.value);
+    warn.classList.toggle('visible', same);
+    btn.disabled = same;
+  }
 
-  const same = (a.value && b.value && a.value === b.value);
-  warn.classList.toggle("d-none", !same);
-  btn.disabled = same;
-}
+  function canSubmitCompare() {
+    const a = document.getElementById('user_a');
+    const b = document.getElementById('user_b');
+    if (!a || !b) return true;
+    if (a.value === b.value) { ensureDifferent(); return false; }
+    return true;
+  }
 
-function canSubmitCompare(){
-  const a = document.getElementById("user_a");
-  const b = document.getElementById("user_b");
-  if (!a || !b) return true;
-  if (a.value === b.value){
+  function parseTimeToMs(t) {
+    if (!t) return null;
+    t = String(t).trim();
+    if (t === '—') return null;
+    const parts = t.split(':');
+    if (parts.length !== 2) return null;
+    const mm = parseInt(parts[0], 10);
+    const ss = parseFloat(parts[1]);
+    if (Number.isNaN(mm) || Number.isNaN(ss)) return null;
+    return Math.round((mm * 60 + ss) * 1000);
+  }
+
+  (function initCompareUI() {
     ensureDifferent();
-    return false;
-  }
-  return true;
-}
+    const meta = document.getElementById('compareMeta');
+    if (!meta) return;
 
-// Parse "MM:SS.xx" to milliseconds. Returns null if invalid / "—"
-function parseTimeToMs(t){
-  if (!t) return null;
-  t = String(t).trim();
-  if (t === "—") return null;
+    const aDist = parseFloat(meta.dataset.aDist || '0');
+    const bDist = parseFloat(meta.dataset.bDist || '0');
+    const aBest = meta.dataset.aBest || '—';
+    const bBest = meta.dataset.bBest || '—';
 
-  const parts = t.split(":");
-  if (parts.length !== 2) return null;
+    const winnerEl   = document.getElementById('bestTimeWinner');
+    const noteEl     = document.getElementById('bestTimeNote');
+    const chipTime   = document.getElementById('timeWinnerChip');
+    const chipDist   = document.getElementById('distWinnerChip');
+    const cardA      = document.getElementById('cardA');
+    const cardB      = document.getElementById('cardB');
 
-  const mm = parseInt(parts[0], 10);
-  const ss = parseFloat(parts[1]);
+    // Distance winner highlight
+    if (aDist > bDist)      { cardA?.classList.add('winner-card'); chipDist?.classList.add('gold'); }
+    else if (bDist > aDist) { cardB?.classList.add('winner-card'); chipDist?.classList.add('gold'); }
 
-  if (Number.isNaN(mm) || Number.isNaN(ss)) return null;
-  return Math.round((mm * 60 + ss) * 1000);
-}
+    const aMs = parseTimeToMs(aBest);
+    const bMs = parseTimeToMs(bBest);
 
-(function initCompareUI(){
-  ensureDifferent();
+    if (!winnerEl || !noteEl) return;
 
-  const meta = document.getElementById("compareMeta");
-  if (!meta) return; // no compare_data yet
-
-  const aDist = parseFloat(meta.dataset.aDist || "0");
-  const bDist = parseFloat(meta.dataset.bDist || "0");
-  const aBest = meta.dataset.aBest || "—";
-  const bBest = meta.dataset.bBest || "—";
-
-  const winnerEl = document.getElementById("bestTimeWinner");
-  const noteEl = document.getElementById("bestTimeNote");
-  const cardA = document.getElementById("cardA");
-  const cardB = document.getElementById("cardB");
-
-  // Distance winner highlight
-  if (aDist > bDist) cardA?.classList.add("winner-card");
-  else if (bDist > aDist) cardB?.classList.add("winner-card");
-
-  // Best-time winner
-  const aMs = parseTimeToMs(aBest);
-  const bMs = parseTimeToMs(bBest);
-
-  if (!winnerEl || !noteEl) return;
-
-  if (aMs === null && bMs === null){
-    winnerEl.textContent = "—";
-    noteEl.textContent = "No best-time data available yet.";
-    return;
-  }
-  if (aMs !== null && bMs === null){
-    winnerEl.textContent = "⚡ Swimmer A";
-    noteEl.textContent = "Swimmer B has no time data.";
-    cardA?.classList.add("winner-time");
-    return;
-  }
-  if (bMs !== null && aMs === null){
-    winnerEl.textContent = "⚡ Swimmer B";
-    noteEl.textContent = "Swimmer A has no time data.";
-    cardB?.classList.add("winner-time");
-    return;
-  }
-
-  if (aMs < bMs){
-    winnerEl.textContent = "⚡ Swimmer A";
-    noteEl.textContent = "Lower time is better.";
-    cardA?.classList.add("winner-time");
-  } else if (bMs < aMs){
-    winnerEl.textContent = "⚡ Swimmer B";
-    noteEl.textContent = "Lower time is better.";
-    cardB?.classList.add("winner-time");
-  } else {
-    winnerEl.textContent = "🤝 Tie";
-    noteEl.textContent = "Both have the same best time.";
-  }
-})();
+    if (aMs === null && bMs === null) {
+      winnerEl.textContent = '—';
+      noteEl.textContent   = 'No best-time data available yet.';
+      return;
+    }
+    if (aMs !== null && bMs === null) {
+      winnerEl.textContent = 'Swimmer A'; noteEl.textContent = 'Swimmer B has no time data.';
+      cardA?.classList.add('winner-time'); chipTime?.classList.add('teal'); return;
+    }
+    if (bMs !== null && aMs === null) {
+      winnerEl.textContent = 'Swimmer B'; noteEl.textContent = 'Swimmer A has no time data.';
+      cardB?.classList.add('winner-time'); chipTime?.classList.add('teal'); return;
+    }
+    if (aMs < bMs) {
+      winnerEl.textContent = 'Swimmer A'; noteEl.textContent = 'Lower time is better.';
+      cardA?.classList.add('winner-time'); chipTime?.classList.add('teal');
+    } else if (bMs < aMs) {
+      winnerEl.textContent = 'Swimmer B'; noteEl.textContent = 'Lower time is better.';
+      cardB?.classList.add('winner-time'); chipTime?.classList.add('teal');
+    } else {
+      winnerEl.textContent = 'Tie'; noteEl.textContent = 'Both have the same best time.';
+    }
+  })();
 </script>
 {% endblock %}

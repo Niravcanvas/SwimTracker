@@ -2,183 +2,402 @@
 {% block title %}Swim Tracker{% endblock %}
 
 {% block head_extra %}
-  <script defer src="{{ url_for('static', filename='js/stopwatch.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/stopwatch.js') }}"></script>
+<style>
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .page-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif; font-size: 1.5rem;
+    font-weight: 800; color: var(--text-1); margin: 0 0 5px;
+  }
+  .page-sub { font-size: 13.5px; color: var(--text-3); margin: 0; }
+
+  .btn-action {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 9px; font-size: 13px; font-weight: 500;
+    text-decoration: none; border: 1px solid var(--border);
+    background: var(--navy-2); color: var(--text-2); transition: all 0.18s;
+  }
+  .btn-action:hover { color: var(--text-1); background: var(--navy-3); }
+  .btn-action svg { width: 14px; height: 14px; }
+
+  /* ── Layout ── */
+  .tracker-layout {
+    display: grid; grid-template-columns: 1fr 300px; gap: 20px;
+    animation: fadeUp 0.35s 0.06s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @media (max-width: 900px) { .tracker-layout { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--navy-2); border: 1px solid var(--border); border-radius: 16px;
+  }
+  .panel-body { padding: 28px; }
+
+  /* ── Stopwatch ── */
+  .sw-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .sw-title {
+    font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+    color: var(--text-1); margin: 0 0 4px;
+  }
+  .sw-sub { font-size: 12px; color: var(--text-3); }
+
+  .sw-status {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 7px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    background: var(--navy-3); color: var(--text-3); border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .sw-status.running { background: rgba(0,194,168,0.12); color: var(--teal); border-color: rgba(0,194,168,0.25); }
+  .sw-status.stopped { background: rgba(245,197,66,0.1); color: var(--gold); border-color: rgba(245,197,66,0.25); }
+  .sw-status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* Clock display */
+  .sw-clock {
+    text-align: center; padding: 32px 24px;
+    background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 14px; margin-bottom: 20px;
+  }
+  .sw-time {
+    font-family: 'Syne', sans-serif; font-size: 3.5rem; font-weight: 800;
+    color: var(--text-1); letter-spacing: 0.04em; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .sw-time.running { color: var(--teal); text-shadow: 0 0 30px rgba(0,194,168,0.3); }
+  .sw-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 8px; }
+
+  /* Stopwatch buttons */
+  .sw-btns { display: flex; gap: 10px; margin-bottom: 28px; }
+
+  .btn-sw {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    flex: 1; padding: 11px 14px; border-radius: 10px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .btn-sw svg { width: 15px; height: 15px; }
+  .btn-sw-start {
+    background: linear-gradient(135deg, var(--teal), #0099dd); color: #fff;
+    box-shadow: 0 4px 14px rgba(0,194,168,0.25);
+  }
+  .btn-sw-start:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-sw-stop {
+    background: rgba(245,197,66,0.12); color: var(--gold);
+    border: 1px solid rgba(245,197,66,0.25);
+  }
+  .btn-sw-stop:hover { background: rgba(245,197,66,0.2); }
+  .btn-sw-reset {
+    background: var(--navy-3); color: var(--text-2); border: 1px solid var(--border);
+    flex: 0 0 auto; padding: 11px 16px;
+  }
+  .btn-sw-reset:hover { color: var(--text-1); border-color: rgba(255,255,255,0.14); }
+
+  /* Divider */
+  .sw-divider { height: 1px; background: var(--border); margin-bottom: 24px; }
+
+  /* Form fields */
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  @media (max-width: 500px) { .form-grid-2 { grid-template-columns: 1fr; } }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text-3);
+  }
+  .field-hint { font-size: 11.5px; color: var(--text-3); }
+
+  .field-select {
+    width: 100%; background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-1);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    padding: 11px 36px 11px 14px; outline: none;
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234e5878' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; background-size: 14px;
+    transition: border-color 0.18s;
+  }
+  .field-select option { background: #0d1530; }
+  .field-select:focus { border-color: rgba(0,194,168,0.45); box-shadow: 0 0 0 3px rgba(0,194,168,0.1); }
+
+  .field-input {
+    width: 100%; background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-1);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    padding: 11px 14px; outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s; -webkit-appearance: none;
+  }
+  .field-input::placeholder { color: var(--text-3); }
+  .field-input:focus { border-color: rgba(0,194,168,0.45); box-shadow: 0 0 0 3px rgba(0,194,168,0.1); }
+
+  /* Summary card */
+  .summary-card {
+    background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .summary-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .summary-row:last-of-type { border-bottom: none; }
+  .summary-row-label { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+  .summary-row-label svg { width: 12px; height: 12px; }
+  .summary-row-value { font-family: 'Syne', sans-serif; font-size: 13.5px; font-weight: 700; color: var(--text-1); }
+  .summary-row-value.teal { color: var(--teal); }
+  .summary-tip { font-size: 11.5px; color: var(--text-3); margin-top: 10px; display: flex; align-items: center; gap: 5px; }
+  .summary-tip svg { width: 12px; height: 12px; color: var(--teal); flex-shrink: 0; }
+
+  /* Save */
+  .btn-save-record {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 13px; border-radius: 10px; border: none; margin-top: 18px;
+    background: linear-gradient(135deg, var(--teal), #0099dd);
+    color: #fff; font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700; letter-spacing: 0.04em;
+    cursor: pointer; transition: opacity 0.18s, transform 0.18s, box-shadow 0.18s;
+    box-shadow: 0 4px 18px rgba(0,194,168,0.25);
+  }
+  .btn-save-record svg { width: 15px; height: 15px; }
+  .btn-save-record:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,194,168,0.35); }
+
+  .save-warn {
+    display: none; align-items: center; gap: 6px;
+    font-size: 12px; color: #ff6b6b; margin-top: 8px;
+  }
+  .save-warn.visible { display: flex; }
+  .save-warn svg { width: 13px; height: 13px; }
+
+  /* ── Tips Panel ── */
+  .tips-panel { padding: 24px; height: 100%; display: flex; flex-direction: column; gap: 16px; }
+  .tips-title {
+    font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+    color: var(--text-1); margin: 0 0 4px;
+  }
+  .tip-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13px; color: var(--text-2); line-height: 1.5;
+  }
+  .tip-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--teal);
+    flex-shrink: 0; margin-top: 6px;
+  }
+
+  .edit-hint {
+    margin-top: auto;
+    padding: 16px; border-radius: 12px;
+    background: var(--navy-3); border: 1px solid var(--border);
+  }
+  .edit-hint-title { font-size: 13px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; }
+  .edit-hint-sub   { font-size: 12px; color: var(--text-3); margin-bottom: 12px; }
+  .btn-open-progress {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 13px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    color: var(--teal); background: var(--teal-glow);
+    border: 1px solid rgba(0,194,168,0.3); text-decoration: none; transition: all 0.18s;
+  }
+  .btn-open-progress:hover { background: rgba(0,194,168,0.22); color: var(--teal); }
+  .btn-open-progress svg { width: 12px; height: 12px; }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+
+<div class="page-header">
   <div>
-    <h2 class="fw-bold mb-1">⏱ Swim Tracker</h2>
-    <p class="text-muted mb-0">Start the stopwatch, select stroke, enter laps, and save your record.</p>
+    <h1 class="page-title">Swim Tracker</h1>
+    <p class="page-sub">Start the stopwatch, select stroke, enter laps, and save.</p>
   </div>
-  <a class="btn btn-outline-primary" href="{{ url_for('progress') }}">📈 View Progress</a>
+  <a class="btn-action" href="{{ url_for('progress') }}">
+    <i data-lucide="trending-up"></i> View Progress
+  </a>
 </div>
 
-<div class="row g-3">
-  <!-- Stopwatch + Form -->
-  <div class="col-lg-8">
-    <div class="card glass border-0 shadow-sm overflow-hidden">
-      <div class="card-body p-4 p-md-5">
+<div class="tracker-layout">
 
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-          <div>
-            <h4 class="fw-bold mb-1">Stopwatch</h4>
-            <div class="text-muted small">Tap Start → Stop → Save.</div>
+  <!-- ── Stopwatch + Form ── -->
+  <div class="panel">
+    <div class="panel-body">
+
+      <div class="sw-header">
+        <div>
+          <div class="sw-title">Stopwatch</div>
+          <div class="sw-sub">Tap Start → swim → Stop → Save.</div>
+        </div>
+        <div class="sw-status" id="swStatus">
+          <span class="sw-status-dot"></span> Ready
+        </div>
+      </div>
+
+      <div class="sw-clock">
+        <div class="sw-time" id="displayTime">00:00.00</div>
+        <div class="sw-label">elapsed time</div>
+      </div>
+
+      <div class="sw-btns">
+        <button class="btn-sw btn-sw-start" type="button" id="btnStart">
+          <i data-lucide="play"></i> Start
+        </button>
+        <button class="btn-sw btn-sw-stop" type="button" id="btnStop">
+          <i data-lucide="pause"></i> Stop
+        </button>
+        <button class="btn-sw btn-sw-reset" type="button" id="btnReset">
+          <i data-lucide="rotate-ccw"></i>
+        </button>
+      </div>
+
+      <div class="sw-divider"></div>
+
+      <form method="post" onsubmit="return validateSave()">
+        <input type="hidden" name="time_ms" id="timeMs" value="0">
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label class="field-label">Stroke Type</label>
+            <select class="field-select" name="stroke_type" required>
+              {% for s in strokes %}
+                <option value="{{ s }}">{{ s }}</option>
+              {% endfor %}
+            </select>
+            <div class="field-hint">Select the stroke used.</div>
           </div>
-          <span id="swStatus" class="badge text-bg-light border">Ready</span>
-        </div>
 
-        <div class="stopwatch-screen my-3">
-          <div class="display-time" id="displayTime">00:00.00</div>
-          <div class="text-muted small">Time</div>
-        </div>
+          <div class="field-group">
+            <label class="field-label">Pool Length</label>
+            <select class="field-select" name="pool_len" id="poolLen">
+              <option value="25" selected>25 m</option>
+              <option value="50">50 m</option>
+            </select>
+            <div class="field-hint">Standard pools: 25m or 50m.</div>
+          </div>
 
-        <div class="d-flex gap-2 flex-wrap mt-2">
-          <button class="btn btn-primary" type="button" id="btnStart">▶ Start</button>
-          <button class="btn btn-warning" type="button" id="btnStop">⏸ Stop</button>
-          <button class="btn btn-outline-secondary" type="button" id="btnReset">↻ Reset</button>
-        </div>
+          <div class="field-group">
+            <label class="field-label">Laps</label>
+            <input class="field-input" type="number" name="laps"
+                   id="laps" min="1" value="10" required>
+            <div class="field-hint">Distance = laps × pool length.</div>
+          </div>
 
-        <hr class="my-4">
-
-        <form method="post" onsubmit="return validateSave()">
-          <input type="hidden" name="time_ms" id="timeMs" value="0">
-
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Stroke Type</label>
-              <select class="form-select" name="stroke_type" required>
-                {% for s in strokes %}
-                  <option value="{{ s }}">{{ s }}</option>
-                {% endfor %}
-              </select>
-              <div class="form-text">Select the stroke used for this swim.</div>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Pool Length</label>
-              <select class="form-select" name="pool_len" id="poolLen">
-                <option value="25" selected>25 m</option>
-                <option value="50">50 m</option>
-              </select>
-              <div class="form-text">Standard pools are 25m or 50m.</div>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Laps</label>
-              <input class="form-control" type="number" name="laps" id="laps" min="1" value="10" required>
-              <div class="form-text">Distance = laps × pool length.</div>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Summary</label>
-              <div class="p-3 rounded-3 border bg-light h-100">
-                <div class="d-flex justify-content-between">
-                  <span class="text-muted">Distance</span>
-                  <span class="fw-semibold" id="distancePreview">250 m</span>
-                </div>
-                <div class="d-flex justify-content-between mt-1">
-                  <span class="text-muted">Time</span>
-                  <span class="fw-semibold" id="timePreview">00:00.00</span>
-                </div>
-                <div class="text-muted small mt-2">
-                  Tip: Stop the timer before saving.
-                </div>
+          <div class="field-group">
+            <label class="field-label">Summary</label>
+            <div class="summary-card">
+              <div class="summary-row">
+                <div class="summary-row-label"><i data-lucide="ruler"></i> Distance</div>
+                <div class="summary-row-value" id="distancePreview">250 m</div>
+              </div>
+              <div class="summary-row">
+                <div class="summary-row-label"><i data-lucide="timer"></i> Time</div>
+                <div class="summary-row-value teal" id="timePreview">00:00.00</div>
+              </div>
+              <div class="summary-tip">
+                <i data-lucide="info"></i> Stop the timer before saving.
               </div>
             </div>
           </div>
-
-          <button id="btnSave" class="btn btn-success mt-3 w-100">💾 Save Record</button>
-          <div id="saveWarn" class="text-danger small mt-2 d-none">
-            Please start and stop the stopwatch before saving.
-          </div>
-        </form>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- Tips / Help -->
-  <div class="col-lg-4">
-    <div class="card glass border-0 shadow-sm h-100">
-      <div class="card-body p-4">
-        <h5 class="fw-bold mb-2">✅ Tips</h5>
-        <ul class="text-muted small mb-0">
-          <li>Use <b>Start</b> when you push off.</li>
-          <li>Use <b>Stop</b> when you finish.</li>
-          <li>Choose correct <b>Stroke</b> before saving.</li>
-          <li>Check <b>laps</b> and <b>pool length</b> for correct distance.</li>
-        </ul>
-
-        <div class="mt-3 p-3 rounded-3 border bg-light">
-          <div class="fw-semibold">Need editing later?</div>
-          <div class="text-muted small">You can edit any record in “Progress”.</div>
-          <a class="btn btn-sm btn-outline-primary mt-2" href="{{ url_for('progress') }}">Open Progress</a>
         </div>
+
+        <button class="btn-save-record" id="btnSave" type="submit">
+          <i data-lucide="save"></i> Save Record
+        </button>
+
+        <div class="save-warn" id="saveWarn">
+          <i data-lucide="circle-alert"></i>
+          Please start and stop the stopwatch before saving.
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Tips Panel ── -->
+  <div class="panel">
+    <div class="tips-panel">
+      <div>
+        <div class="tips-title">Tips</div>
+      </div>
+      <div class="tip-item"><span class="tip-dot"></span> Use <b>Start</b> when you push off the wall.</div>
+      <div class="tip-item"><span class="tip-dot"></span> Use <b>Stop</b> when you touch the finish.</div>
+      <div class="tip-item"><span class="tip-dot"></span> Choose the correct <b>Stroke</b> before saving.</div>
+      <div class="tip-item"><span class="tip-dot"></span> Double-check <b>laps</b> and <b>pool length</b> for accurate distance.</div>
+
+      <div class="edit-hint">
+        <div class="edit-hint-title">Need to edit later?</div>
+        <div class="edit-hint-sub">Any saved record can be updated in Progress.</div>
+        <a class="btn-open-progress" href="{{ url_for('progress') }}">
+          <i data-lucide="trending-up"></i> Open Progress
+        </a>
       </div>
     </div>
   </div>
+
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-(function(){
-  function calcDistance(){
-    const lapsEl = document.getElementById("laps");
-    const poolEl = document.getElementById("poolLen");
-    const outEl  = document.getElementById("distancePreview");
-    if (!lapsEl || !poolEl || !outEl) return;
+  lucide.createIcons();
 
-    const laps = parseFloat(lapsEl.value || "0");
-    const pool = parseFloat(poolEl.value || "0");
-    const d = Math.max(0, laps) * Math.max(0, pool);
-    outEl.textContent = (d ? Math.round(d) : 0) + " m";
-  }
-
-  document.getElementById("laps")?.addEventListener("input", calcDistance);
-  document.getElementById("poolLen")?.addEventListener("change", calcDistance);
-  calcDistance();
-
-  // mirror stopwatch display into summary (no setInterval leak on some browsers)
-  const tOut = document.getElementById("timePreview");
-  const tSrc = document.getElementById("displayTime");
-  const timeSyncTimer = setInterval(() => {
-    if (tOut && tSrc) tOut.textContent = (tSrc.textContent || "00:00.00");
-    // if page changes / element gone, stop timer
-    if (!document.body.contains(tOut) || !document.body.contains(tSrc)) clearInterval(timeSyncTimer);
-  }, 200);
-
-  // validate before submit
-  window.validateSave = function(){
-    const ms = parseInt(document.getElementById("timeMs")?.value || "0", 10);
-    const warn = document.getElementById("saveWarn");
-    if (!ms || ms <= 0){
-      warn?.classList.remove("d-none");
-      return false;
+  (function () {
+    function calcDistance() {
+      const laps = parseFloat(document.getElementById('laps')?.value || '0');
+      const pool = parseFloat(document.getElementById('poolLen')?.value || '0');
+      const d    = Math.max(0, laps) * Math.max(0, pool);
+      const el   = document.getElementById('distancePreview');
+      if (el) el.textContent = (d ? Math.round(d) : 0) + ' m';
     }
-    warn?.classList.add("d-none");
-    return true;
-  }
 
-  // status badge updates
-  const statusEl = document.getElementById("swStatus");
-  document.getElementById("btnStart")?.addEventListener("click", () => {
-    if (!statusEl) return;
-    statusEl.className = "badge text-bg-success";
-    statusEl.textContent = "Running";
-  });
-  document.getElementById("btnStop")?.addEventListener("click", () => {
-    if (!statusEl) return;
-    statusEl.className = "badge text-bg-warning";
-    statusEl.textContent = "Stopped";
-  });
-  document.getElementById("btnReset")?.addEventListener("click", () => {
-    if (!statusEl) return;
-    statusEl.className = "badge text-bg-light border";
-    statusEl.textContent = "Ready";
-    document.getElementById("saveWarn")?.classList.add("d-none");
-  });
-})();
+    document.getElementById('laps')?.addEventListener('input', calcDistance);
+    document.getElementById('poolLen')?.addEventListener('change', calcDistance);
+    calcDistance();
+
+    // Sync time display to summary
+    const tOut = document.getElementById('timePreview');
+    const tSrc = document.getElementById('displayTime');
+    const timer = setInterval(() => {
+      if (!document.body.contains(tOut) || !document.body.contains(tSrc)) { clearInterval(timer); return; }
+      if (tOut && tSrc) tOut.textContent = tSrc.textContent || '00:00.00';
+    }, 200);
+
+    window.validateSave = function () {
+      const ms   = parseInt(document.getElementById('timeMs')?.value || '0', 10);
+      const warn = document.getElementById('saveWarn');
+      if (!ms || ms <= 0) { warn?.classList.add('visible'); return false; }
+      warn?.classList.remove('visible');
+      return true;
+    };
+
+    const statusEl = document.getElementById('swStatus');
+    const clock    = document.getElementById('displayTime');
+
+    document.getElementById('btnStart')?.addEventListener('click', () => {
+      if (!statusEl) return;
+      statusEl.innerHTML = '<span class="sw-status-dot"></span> Running';
+      statusEl.className = 'sw-status running';
+      clock?.classList.add('running');
+    });
+    document.getElementById('btnStop')?.addEventListener('click', () => {
+      if (!statusEl) return;
+      statusEl.innerHTML = '<span class="sw-status-dot"></span> Stopped';
+      statusEl.className = 'sw-status stopped';
+      clock?.classList.remove('running');
+    });
+    document.getElementById('btnReset')?.addEventListener('click', () => {
+      if (!statusEl) return;
+      statusEl.innerHTML = '<span class="sw-status-dot"></span> Ready';
+      statusEl.className = 'sw-status';
+      clock?.classList.remove('running');
+      document.getElementById('saveWarn')?.classList.remove('visible');
+    });
+  })();
 </script>
 {% endblock %}

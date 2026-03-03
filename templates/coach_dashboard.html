@@ -1,186 +1,440 @@
 {% extends "base.html" %}
-{% block title %}Coach Panel{% endblock %}
+{% block title %}Coach Panel – Swim Tracker{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* ── Page Header ── */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .page-header-left {}
+  .page-eyebrow {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--teal);
+    margin-bottom: 6px;
+  }
+  .page-eyebrow svg { width: 12px; height: 12px; }
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.55rem; font-weight: 800;
+    color: var(--text-1); margin: 0 0 4px;
+  }
+  .page-sub { font-size: 13.5px; color: var(--text-3); margin: 0; }
+
+  .page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn-action {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    text-decoration: none; border: 1px solid; transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-action svg { width: 14px; height: 14px; }
+  .btn-action-teal {
+    color: var(--teal); background: var(--teal-glow);
+    border-color: rgba(0,194,168,0.3);
+  }
+  .btn-action-teal:hover { background: rgba(0,194,168,0.22); color: var(--teal); }
+  .btn-action-outline {
+    color: var(--text-2); background: var(--navy-2);
+    border-color: var(--border);
+  }
+  .btn-action-outline:hover { color: var(--text-1); background: var(--navy-3); border-color: rgba(255,255,255,0.12); }
+
+  /* ── Layout Grid ── */
+  .coach-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 20px;
+    animation: fadeUp 0.35s 0.06s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @media (max-width: 991px) { .coach-grid { grid-template-columns: 1fr; } }
+
+  /* ── Sidebar Card ── */
+  .sidebar-card {
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    height: fit-content;
+  }
+
+  .sidebar-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-3); margin: 0 0 16px;
+  }
+
+  .tip-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .tip-item { display: flex; align-items: flex-start; gap: 10px; }
+  .tip-icon {
+    width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--navy-3); border: 1px solid var(--border);
+  }
+  .tip-icon svg { width: 13px; height: 13px; color: var(--teal); }
+  .tip-text { font-size: 13px; color: var(--text-2); line-height: 1.5; padding-top: 6px; }
+  .tip-text b { color: var(--text-1); font-weight: 600; }
+
+  .sidebar-divider { height: 1px; background: var(--border); margin: 0 0 20px; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 7px; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 50px; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    background: var(--navy-3); border: 1px solid var(--border); color: var(--text-3);
+  }
+  .tag svg { width: 11px; height: 11px; }
+
+  /* ── Main Table Card ── */
+  .table-card {
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .table-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700; color: var(--text-1); margin: 0 0 2px;
+  }
+  .table-count { font-size: 12px; color: var(--text-3); }
+
+  /* Filter + Search row */
+  .table-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .filter-group { display: flex; border-radius: 9px; overflow: hidden; border: 1px solid var(--border); }
+  .filter-btn {
+    padding: 7px 14px; font-size: 12px; font-weight: 600;
+    background: transparent; border: none; color: var(--text-3);
+    cursor: pointer; transition: all 0.18s; white-space: nowrap;
+  }
+  .filter-btn:not(:last-child) { border-right: 1px solid var(--border); }
+  .filter-btn:hover { background: rgba(255,255,255,0.05); color: var(--text-2); }
+  .filter-btn.active { background: var(--teal-glow); color: var(--teal); }
+
+  .search-wrap {
+    position: relative; display: flex; align-items: center;
+  }
+  .search-icon {
+    position: absolute; left: 11px; pointer-events: none; color: var(--text-3);
+  }
+  .search-icon svg { width: 14px; height: 14px; }
+  .search-input {
+    background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 9px; color: var(--text-1);
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    padding: 8px 12px 8px 34px;
+    outline: none; width: 200px;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  .search-input::placeholder { color: var(--text-3); }
+  .search-input:focus {
+    border-color: rgba(0,194,168,0.4);
+    box-shadow: 0 0 0 3px rgba(0,194,168,0.08);
+  }
+
+  /* Table */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table thead tr {
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table th {
+    padding: 11px 16px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-3); text-align: left; white-space: nowrap;
+  }
+  .data-table th.text-end { text-align: right; }
+  .data-table tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s;
+  }
+  .data-table tbody tr:last-child { border-bottom: none; }
+  .data-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+  .data-table td {
+    padding: 13px 16px; font-size: 13.5px; color: var(--text-2);
+    vertical-align: middle;
+  }
+  .data-table td.text-end { text-align: right; }
+
+  .td-id { font-size: 12px; color: var(--text-3); font-family: 'Syne', sans-serif; }
+
+  .swimmer-name { font-weight: 600; color: var(--text-1); font-size: 14px; }
+  .swimmer-id   { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+  /* Role & Level badges */
+  .badge-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 50px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .badge-pill svg { width: 10px; height: 10px; }
+
+  .badge-user     { background: rgba(100,150,255,0.1); color: #7aabff; border: 1px solid rgba(100,150,255,0.2); }
+  .badge-coach    { background: var(--teal-glow); color: var(--teal); border: 1px solid rgba(0,194,168,0.25); }
+  .badge-admin    { background: rgba(245,197,66,0.1); color: var(--gold); border: 1px solid rgba(245,197,66,0.2); }
+  .badge-advanced { background: rgba(0,200,100,0.08); color: #4dffaa; border: 1px solid rgba(0,200,100,0.2); }
+  .badge-beginner { background: rgba(100,150,255,0.08); color: #7aabff; border: 1px solid rgba(100,150,255,0.15); }
+
+  .medals-cell { display: flex; align-items: center; gap: 7px; }
+  .medals-cell svg { width: 13px; height: 13px; color: var(--gold); }
+  .medals-val { font-weight: 600; color: var(--text-1); }
+
+  /* Export btn */
+  .btn-export {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    color: #4dffaa; background: rgba(0,200,100,0.08);
+    border: 1px solid rgba(0,200,100,0.2); text-decoration: none;
+    transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-export:hover { background: rgba(0,200,100,0.14); color: #4dffaa; }
+  .btn-export svg { width: 13px; height: 13px; }
+
+  /* Empty state */
+  .empty-state {
+    padding: 60px 24px; text-align: center; color: var(--text-3);
+  }
+  .empty-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--navy-3); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+  }
+  .empty-icon svg { width: 22px; height: 22px; color: var(--text-3); }
+  .empty-title { font-size: 14px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+  .empty-sub   { font-size: 13px; }
+
+  /* Table footer note */
+  .table-footer-note {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--text-3);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .table-footer-note svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--text-3); }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
-  <div>
-    <h2 class="fw-bold mb-1">🏅 Coach Panel</h2>
-    <p class="text-muted mb-0">View swimmers, check ranking, export PDF reports, and compare performance.</p>
+
+<!-- ── Page Header ── -->
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="page-eyebrow">
+      <i data-lucide="graduation-cap"></i> Coach Panel
+    </div>
+    <h1 class="page-title">Swimmer Management</h1>
+    <p class="page-sub">View swimmers, check rankings, export reports, and compare performance.</p>
   </div>
 
-  <div class="d-flex gap-2 flex-wrap">
-    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('coach_ranking') }}">📈 Ranking List</a>
-    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('compare') }}">🆚 Compare Swimmers</a>
+  <div class="page-actions">
+    <a class="btn-action btn-action-outline" href="{{ url_for('coach_ranking') }}">
+      <i data-lucide="bar-chart-2"></i> Ranking List
+    </a>
+    <a class="btn-action btn-action-teal" href="{{ url_for('compare') }}">
+      <i data-lucide="git-compare"></i> Compare Swimmers
+    </a>
   </div>
 </div>
 
-<div class="row g-3">
+<!-- ── Main Grid ── -->
+<div class="coach-grid">
 
-  <!-- Tips -->
-  <div class="col-lg-4">
-    <div class="card glass border-0 shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="fw-bold mb-2">Quick Tips</h5>
-        <ul class="mb-0 text-muted small">
-          <li>Use <b>Ranking</b> to see top swimmers by total distance.</li>
-          <li>Use <b>Compare</b> to compare two swimmers.</li>
-          <li>Export <b>PDF</b> for an official performance report.</li>
-        </ul>
+  <!-- Sidebar -->
+  <div class="sidebar-card">
+    <div class="sidebar-title">Quick Tips</div>
 
-        <hr>
-
-        <div class="d-flex gap-2 flex-wrap">
-          <span class="badge text-bg-light border">Coach Tools</span>
-          <span class="badge text-bg-light border">PDF Reports</span>
-          <span class="badge text-bg-light border">Compare</span>
-        </div>
+    <div class="tip-list">
+      <div class="tip-item">
+        <div class="tip-icon"><i data-lucide="bar-chart-2"></i></div>
+        <div class="tip-text">Use <b>Ranking</b> to see top swimmers sorted by total distance.</div>
       </div>
+      <div class="tip-item">
+        <div class="tip-icon"><i data-lucide="git-compare"></i></div>
+        <div class="tip-text">Use <b>Compare</b> to analyse two swimmers side by side.</div>
+      </div>
+      <div class="tip-item">
+        <div class="tip-icon"><i data-lucide="file-text"></i></div>
+        <div class="tip-text">Export a <b>PDF</b> for an official swimmer performance report.</div>
+      </div>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="tag-row">
+      <span class="tag"><i data-lucide="graduation-cap"></i> Coach Tools</span>
+      <span class="tag"><i data-lucide="file-text"></i> PDF Reports</span>
+      <span class="tag"><i data-lucide="git-compare"></i> Compare</span>
     </div>
   </div>
 
-  <!-- Main Table -->
-  <div class="col-lg-8">
-    <div class="card glass border-0 shadow-sm">
-      <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div>
-          <h5 class="fw-bold mb-0">👥 People List</h5>
-          <div class="text-muted small">Total: {{ swimmers|length }}</div>
-        </div>
-
-        <div class="d-flex gap-2 align-items-center flex-wrap">
-
-          <!-- ✅ Role filter buttons -->
-          <div class="btn-group btn-group-sm" role="group">
-            <button type="button" class="btn btn-outline-dark active" id="btnAll" onclick="filterRole('ALL')">
-              All
-            </button>
-            <button type="button" class="btn btn-outline-primary" id="btnUser" onclick="filterRole('USER')">
-              Swimmers
-            </button>
-            <button type="button" class="btn btn-outline-info" id="btnCoach" onclick="filterRole('COACH')">
-              Coaches
-            </button>
-          </div>
-
-          <!-- Search -->
-          <div class="input-group input-group-sm" style="max-width: 280px;">
-            <span class="input-group-text">🔎</span>
-            <input id="swimSearch" class="form-control" placeholder="Search name..." oninput="filterRole(currentRole)">
-          </div>
-        </div>
+  <!-- Table Card -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <div>
+        <div class="table-title">People List</div>
+        <div class="table-count">{{ swimmers|length }} total</div>
       </div>
 
-      <div class="table-responsive">
-        <table class="table align-middle mb-0" id="swimTable">
-          <thead class="table-light">
-            <tr>
-              <th style="width:80px;">ID</th>
-              <th>Name</th>
-              <th style="width:150px;">Role</th>
-              <th style="width:150px;">Level</th>
-              <th style="width:130px;">Medals</th>
-              <th class="text-end" style="width:170px;">Report</th>
-            </tr>
-          </thead>
+      <div class="table-controls">
+        <div class="filter-group">
+          <button class="filter-btn active" id="btnAll"   onclick="filterRole('ALL')">All</button>
+          <button class="filter-btn"        id="btnUser"  onclick="filterRole('USER')">Swimmers</button>
+          <button class="filter-btn"        id="btnCoach" onclick="filterRole('COACH')">Coaches</button>
+        </div>
 
-          <tbody>
-            {% if swimmers|length == 0 %}
-              <tr>
-                <td colspan="6" class="text-center text-muted py-5">
-                  No swimmers found.
+        <div class="search-wrap">
+          <span class="search-icon"><i data-lucide="search"></i></span>
+          <input
+            id="swimSearch"
+            class="search-input"
+            type="text"
+            placeholder="Search name…"
+            oninput="filterRole(currentRole)">
+        </div>
+      </div>
+    </div>
+
+    <div style="overflow-x: auto;">
+      <table class="data-table" id="swimTable">
+        <thead>
+          <tr>
+            <th style="width:70px;">ID</th>
+            <th>Name</th>
+            <th style="width:130px;">Role</th>
+            <th style="width:130px;">Level</th>
+            <th style="width:110px;">Medals</th>
+            <th class="text-end" style="width:140px;">Report</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% if swimmers|length == 0 %}
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <div class="empty-icon"><i data-lucide="users"></i></div>
+                  <div class="empty-title">No swimmers found</div>
+                  <div class="empty-sub">No records match your current filter.</div>
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            {% for s in swimmers %}
+              {% set rr = s.role if s.role is defined else "USER" %}
+              <tr class="sw-row"
+                  data-role="{{ rr }}"
+                  data-name="{{ s.name|lower }}">
+
+                <td class="td-id">#{{ s.user_id }}</td>
+
+                <td>
+                  <div class="swimmer-name">{{ s.name }}</div>
+                  <div class="swimmer-id">uid {{ s.user_id }}</div>
+                </td>
+
+                <td>
+                  {% if rr == "COACH" %}
+                    <span class="badge-pill badge-coach">
+                      <i data-lucide="graduation-cap"></i> Coach
+                    </span>
+                  {% elif rr == "ADMIN" %}
+                    <span class="badge-pill badge-admin">
+                      <i data-lucide="shield-check"></i> Admin
+                    </span>
+                  {% else %}
+                    <span class="badge-pill badge-user">
+                      <i data-lucide="user"></i> User
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if s.level == "ADVANCED" %}
+                    <span class="badge-pill badge-advanced">
+                      <i data-lucide="zap"></i> Advanced
+                    </span>
+                  {% else %}
+                    <span class="badge-pill badge-beginner">
+                      <i data-lucide="sprout"></i> Beginner
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <div class="medals-cell">
+                    <i data-lucide="medal"></i>
+                    <span class="medals-val">{{ s.medals }}</span>
+                  </div>
+                </td>
+
+                <td class="text-end">
+                  <a class="btn-export" href="{{ url_for('coach_export_pdf', user_id=s.user_id) }}">
+                    <i data-lucide="download"></i> Export PDF
+                  </a>
                 </td>
               </tr>
-            {% else %}
-              {% for s in swimmers %}
-                <tr class="sw-row"
-                    data-role="{{ s.role if s.role is defined else 'USER' }}"
-                    data-name="{{ s.name|lower }}">
+            {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
 
-                  <td class="text-muted">#{{ s.user_id }}</td>
-
-                  <td>
-                    <div class="fw-semibold sw-name">{{ s.name }}</div>
-                    <div class="text-muted small">ID: {{ s.user_id }}</div>
-                  </td>
-
-                  <!-- ✅ Role -->
-                  <td>
-                    {% set rr = s.role if s.role is defined else "USER" %}
-                    {% if rr == "COACH" %}
-                      <span class="badge text-bg-info">COACH</span>
-                    {% elif rr == "ADMIN" %}
-                      <span class="badge text-bg-warning">ADMIN</span>
-                    {% else %}
-                      <span class="badge text-bg-secondary">USER</span>
-                    {% endif %}
-                  </td>
-
-                  <!-- Level -->
-                  <td>
-                    {% if s.level == "ADVANCED" %}
-                      <span class="badge text-bg-success">ADVANCED</span>
-                    {% else %}
-                      <span class="badge text-bg-primary-subtle border">BEGINNER</span>
-                    {% endif %}
-                  </td>
-
-                  <!-- Medals -->
-                  <td>
-                    <span class="badge text-bg-light border">{{ s.medals }} 🥇</span>
-                  </td>
-
-                  <td class="text-end">
-                    <a class="btn btn-sm btn-outline-success"
-                       href="{{ url_for('coach_export_pdf', user_id=s.user_id) }}">
-                      Export PDF
-                    </a>
-                  </td>
-                </tr>
-              {% endfor %}
-            {% endif %}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="card-body pt-3">
-        <div class="text-muted small">
-          Note: Coaches can export reports only for swimmers in their academy. Admin can export for all swimmers.
-        </div>
-      </div>
+    <div class="table-footer-note">
+      <i data-lucide="info"></i>
+      Coaches can export reports only for swimmers in their academy. Admins can export for all.
     </div>
   </div>
+
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-let currentRole = "ALL";
+  lucide.createIcons();
 
-function setActive(btnId){
-  ["btnAll","btnUser","btnCoach"].forEach(id=>{
-    document.getElementById(id)?.classList.remove("active");
-  });
-  document.getElementById(btnId)?.classList.add("active");
-}
+  let currentRole = "ALL";
 
-function filterRole(role){
-  currentRole = role;
+  function filterRole(role) {
+    currentRole = role;
 
-  if(role === "ALL") setActive("btnAll");
-  if(role === "USER") setActive("btnUser");
-  if(role === "COACH") setActive("btnCoach");
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    const map = { ALL: 'btnAll', USER: 'btnUser', COACH: 'btnCoach' };
+    document.getElementById(map[role])?.classList.add('active');
 
-  const q = (document.getElementById("swimSearch")?.value || "").toLowerCase().trim();
+    const q = (document.getElementById('swimSearch')?.value || '').toLowerCase().trim();
 
-  document.querySelectorAll("#swimTable tbody .sw-row").forEach(row=>{
-    const r = (row.dataset.role || "USER").toUpperCase();
-    const name = (row.dataset.name || "");
-
-    const okRole = (role === "ALL") || (r === role);
-    const okSearch = !q || name.includes(q);
-
-    row.style.display = (okRole && okSearch) ? "" : "none";
-  });
-}
+    document.querySelectorAll('#swimTable tbody .sw-row').forEach(row => {
+      const r    = (row.dataset.role || 'USER').toUpperCase();
+      const name = row.dataset.name || '';
+      const okRole   = role === 'ALL' || r === role;
+      const okSearch = !q || name.includes(q);
+      row.style.display = (okRole && okSearch) ? '' : 'none';
+    });
+  }
 </script>
 {% endblock %}

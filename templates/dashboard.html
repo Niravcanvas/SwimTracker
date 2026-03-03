@@ -1,137 +1,464 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - Swim Tracker{% endblock %}
+{% block title %}Dashboard – Swim Tracker{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* ── Hero Card ── */
+  .hero-card {
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 40px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.35s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .hero-card::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,194,168,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .hero-greeting {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: var(--text-1);
+    margin: 0 0 6px;
+    letter-spacing: 0.01em;
+  }
+  .hero-greeting span { color: var(--teal); }
+
+  .hero-sub {
+    font-size: 14px;
+    color: var(--text-3);
+    margin: 0;
+  }
+
+  /* Meta badges */
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .meta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--navy-3);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+  }
+  .meta-badge svg { width: 12px; height: 12px; color: var(--text-3); }
+  .meta-badge b   { color: var(--text-1); font-weight: 600; }
+
+  .badge-advanced {
+    background: rgba(0,194,168,0.1);
+    border-color: rgba(0,194,168,0.25);
+    color: var(--teal);
+  }
+  .badge-beginner {
+    background: rgba(100,150,255,0.1);
+    border-color: rgba(100,150,255,0.2);
+    color: #7aabff;
+  }
+
+  /* Edit Profile btn */
+  .btn-edit-profile {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+    background: var(--navy-3);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .btn-edit-profile:hover { color: var(--text-1); border-color: rgba(255,255,255,0.14); }
+  .btn-edit-profile svg { width: 14px; height: 14px; }
+
+  /* Goal block */
+  .goal-block {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .goal-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+  .goal-label svg { width: 14px; height: 14px; color: var(--teal); }
+  .goal-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--teal);
+    font-family: 'Syne', sans-serif;
+  }
+
+  .goal-bar-track {
+    height: 6px;
+    background: var(--navy-3);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .goal-bar-fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--teal), #0099ff);
+    box-shadow: 0 0 10px rgba(0,194,168,0.4);
+  }
+  .goal-hint {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 8px;
+  }
+
+  .goal-empty {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+    padding: 18px 20px;
+    border-radius: 12px;
+    background: var(--navy-3);
+    border: 1px dashed rgba(255,255,255,0.1);
+  }
+  .goal-empty-info { display: flex; align-items: center; gap: 12px; }
+  .goal-empty-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--teal-glow);
+    border: 1px solid rgba(0,194,168,0.2);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .goal-empty-icon svg { width: 16px; height: 16px; color: var(--teal); }
+  .goal-empty-title { font-size: 13px; font-weight: 600; color: var(--text-1); margin-bottom: 2px; }
+  .goal-empty-sub   { font-size: 12px; color: var(--text-3); }
+
+  .btn-set-goal {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    color: var(--teal); background: var(--teal-glow);
+    border: 1px solid rgba(0,194,168,0.3); text-decoration: none;
+    transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-set-goal:hover { background: rgba(0,194,168,0.22); color: var(--teal); }
+  .btn-set-goal svg { width: 13px; height: 13px; }
+
+  /* ── Action Cards ── */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.4s 0.08s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @media (max-width: 767px) {
+    .actions-grid { grid-template-columns: 1fr; }
+  }
+  @media (min-width: 576px) and (max-width: 767px) {
+    .actions-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .action-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    text-decoration: none;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .action-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(0,194,168,0.25);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,194,168,0.08);
+  }
+  .action-card:hover .action-arrow { opacity: 1; transform: translateX(0); }
+
+  .action-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .action-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .action-icon svg { width: 20px; height: 20px; }
+  .icon-teal  { background: var(--teal-glow); border: 1px solid rgba(0,194,168,0.2); }
+  .icon-teal svg { color: var(--teal); }
+  .icon-blue  { background: rgba(100,150,255,0.12); border: 1px solid rgba(100,150,255,0.2); }
+  .icon-blue svg { color: #7aabff; }
+  .icon-gold  { background: rgba(245,197,66,0.1); border: 1px solid rgba(245,197,66,0.2); }
+  .icon-gold svg { color: var(--gold); }
+
+  .action-tag {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 50px;
+    background: var(--navy-3); border: 1px solid var(--border); color: var(--text-3);
+  }
+
+  .action-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    color: var(--text-1); margin: 0 0 6px;
+  }
+
+  .action-desc {
+    font-size: 13px; color: var(--text-3);
+    margin: 0; line-height: 1.5; flex: 1;
+  }
+
+  .action-arrow {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 600; color: var(--teal);
+    margin-top: 16px; opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .action-arrow svg { width: 13px; height: 13px; }
+
+  /* ── Role Banner ── */
+  .role-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 20px 24px;
+    border-radius: 14px;
+    border: 1px solid;
+    margin-bottom: 4px;
+    animation: fadeUp 0.4s 0.16s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  .role-banner.coach {
+    background: rgba(0,194,168,0.06);
+    border-color: rgba(0,194,168,0.2);
+  }
+  .role-banner.admin {
+    background: rgba(245,197,66,0.06);
+    border-color: rgba(245,197,66,0.2);
+  }
+
+  .role-banner-left { display: flex; align-items: center; gap: 14px; }
+
+  .role-banner-icon {
+    width: 40px; height: 40px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .coach .role-banner-icon { background: var(--teal-glow); border: 1px solid rgba(0,194,168,0.2); }
+  .coach .role-banner-icon svg { color: var(--teal); width: 18px; height: 18px; }
+  .admin .role-banner-icon { background: rgba(245,197,66,0.1); border: 1px solid rgba(245,197,66,0.2); }
+  .admin .role-banner-icon svg { color: var(--gold); width: 18px; height: 18px; }
+
+  .role-banner-title { font-size: 14px; font-weight: 700; color: var(--text-1); margin-bottom: 2px; }
+  .role-banner-sub   { font-size: 12px; color: var(--text-3); }
+
+  .btn-role-coach {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 18px; border-radius: 9px; font-size: 13px; font-weight: 600;
+    color: var(--teal); background: var(--teal-glow);
+    border: 1px solid rgba(0,194,168,0.3); text-decoration: none;
+    transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-role-coach:hover { background: rgba(0,194,168,0.22); color: var(--teal); }
+  .btn-role-coach svg { width: 14px; height: 14px; }
+
+  .btn-role-admin {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 18px; border-radius: 9px; font-size: 13px; font-weight: 600;
+    color: var(--gold); background: rgba(245,197,66,0.1);
+    border: 1px solid rgba(245,197,66,0.3); text-decoration: none;
+    transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-role-admin:hover { background: rgba(245,197,66,0.18); color: var(--gold); }
+  .btn-role-admin svg { width: 14px; height: 14px; }
+</style>
+{% endblock %}
 
 {% block content %}
 
-<!-- Header / Hero -->
-<div class="card glass hero-card border-0 shadow-sm mb-3">
-  <div class="card-body p-4 p-md-5">
-    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-      <div>
-        <h1 class="fw-bold mb-1">👋 Welcome, {{ user.name }}</h1>
-        <p class="text-muted mb-0">
-          Track swims, improve timing, and build consistency.
-        </p>
+<!-- ── Hero ── -->
+<div class="hero-card">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+    <div>
+      <h1 class="hero-greeting">
+        Good to see you, <span>{{ user.name }}</span>
+      </h1>
+      <p class="hero-sub">Track swims, improve timing, and build consistency.</p>
 
-        <div class="d-flex flex-wrap gap-2 mt-3">
-          <span class="badge text-bg-light border">Role: <b class="ms-1">{{ user.role }}</b></span>
+      <div class="meta-row">
+        <span class="meta-badge">
+          <i data-lucide="shield"></i>
+          Role: <b>{{ user.role }}</b>
+        </span>
 
-          {% if user.level == "ADVANCED" %}
-            <span class="badge text-bg-success">ADVANCED</span>
-          {% else %}
-            <span class="badge text-bg-primary-subtle border">BEGINNER</span>
-          {% endif %}
+        {% if user.level == "ADVANCED" %}
+          <span class="meta-badge badge-advanced">
+            <i data-lucide="zap"></i> Advanced
+          </span>
+        {% else %}
+          <span class="meta-badge badge-beginner">
+            <i data-lucide="sprout"></i> Beginner
+          </span>
+        {% endif %}
 
-          <span class="badge text-bg-light border">Medals: <b class="ms-1">{{ user.medals }}</b> 🥇</span>
-          <span class="badge text-bg-light border">Academy: <b class="ms-1">{{ user.academy_name or "—" }}</b></span>
-        </div>
-      </div>
+        <span class="meta-badge">
+          <i data-lucide="medal"></i>
+          Medals: <b>{{ user.medals }}</b>
+        </span>
 
-      <div class="text-end">
-        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('profile') }}">Edit Profile</a>
+        <span class="meta-badge">
+          <i data-lucide="building-2"></i>
+          {{ user.academy_name or "No Academy" }}
+        </span>
       </div>
     </div>
 
-    <!-- Goal / Motivation -->
-    {% if user.goal_distance_m %}
-      <div class="mt-4">
-        <div class="d-flex justify-content-between small text-muted mb-1">
-          <span>🎯 Goal Distance</span>
-          <span>{{ "%.0f"|format(user.goal_distance_m) }} m</span>
-        </div>
-
-        <!-- Goal set indicator (full bar) -->
-        <div class="progress" style="height: 12px;">
-          <div class="progress-bar" role="progressbar" style="width: 100%"></div>
-        </div>
-
-        <div class="text-muted small mt-2">
-          Your goal is set. Track your progress inside “View Progress”.
-        </div>
-      </div>
-    {% else %}
-      <div class="mt-4 p-3 rounded-3 border bg-light">
-        <div class="fw-semibold">🎯 Set a goal</div>
-        <div class="text-muted small">Add your goal distance in Profile to stay motivated.</div>
-        <a class="btn btn-sm btn-outline-primary mt-2" href="{{ url_for('profile') }}">Set Goal</a>
-      </div>
-    {% endif %}
-  </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="row g-3">
-
-  <div class="col-md-4">
-    <a class="card glass border-0 shadow-sm action-card text-decoration-none h-100"
-       href="{{ url_for('swim') }}">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="icon-bubble">⏱</div>
-          <span class="badge text-bg-light border">Tracker</span>
-        </div>
-        <h5 class="fw-bold mt-3 mb-1">Start Swim</h5>
-        <p class="text-muted mb-0">Stopwatch + stroke selection + save record.</p>
-      </div>
+    <a class="btn-edit-profile" href="{{ url_for('profile') }}">
+      <i data-lucide="pencil"></i> Edit Profile
     </a>
   </div>
 
-  <div class="col-md-4">
-    <a class="card glass border-0 shadow-sm action-card text-decoration-none h-100"
-       href="{{ url_for('progress') }}">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="icon-bubble">📈</div>
-          <span class="badge text-bg-light border">Stats</span>
+  <!-- Goal -->
+  {% if user.goal_distance_m %}
+    <div class="goal-block">
+      <div class="goal-header">
+        <div class="goal-label">
+          <i data-lucide="target"></i> Goal Distance
         </div>
-        <h5 class="fw-bold mt-3 mb-1">View Progress</h5>
-        <p class="text-muted mb-0">History, totals, best timing, charts.</p>
+        <div class="goal-value">{{ "%.0f"|format(user.goal_distance_m) }} m</div>
       </div>
-    </a>
-  </div>
-
-  <div class="col-md-4">
-    <a class="card glass border-0 shadow-sm action-card text-decoration-none h-100"
-       href="{{ url_for('players') }}">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="icon-bubble">🏆</div>
-          <span class="badge text-bg-light border">Profiles</span>
-        </div>
-        <h5 class="fw-bold mt-3 mb-1">Player Profiles</h5>
-        <p class="text-muted mb-0">Learn from famous swimmers and strokes.</p>
+      <div class="goal-bar-track">
+        <div class="goal-bar-fill"></div>
       </div>
-    </a>
-  </div>
-
-</div>
-
-<!-- Optional Role-based cards -->
-{% if user.role == "COACH" %}
-  <div class="mt-3">
-    <div class="card glass border-0 shadow-sm">
-      <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="goal-hint">Goal is set — track your progress in View Progress.</div>
+    </div>
+  {% else %}
+    <div class="goal-empty">
+      <div class="goal-empty-info">
+        <div class="goal-empty-icon"><i data-lucide="target"></i></div>
         <div>
-          <div class="fw-bold">👨‍🏫 Coach Tools</div>
-          <div class="text-muted small">Ranking, compare, export PDF reports.</div>
+          <div class="goal-empty-title">No goal set yet</div>
+          <div class="goal-empty-sub">Add a goal distance in Profile to stay motivated.</div>
         </div>
-        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('coach_dashboard') }}">Open Coach Panel</a>
+      </div>
+      <a class="btn-set-goal" href="{{ url_for('profile') }}">
+        <i data-lucide="plus"></i> Set Goal
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ── Quick Actions ── -->
+<div class="actions-grid">
+
+  <a class="action-card" href="{{ url_for('swim') }}">
+    <div class="action-top">
+      <div class="action-icon icon-teal"><i data-lucide="timer"></i></div>
+      <span class="action-tag">Tracker</span>
+    </div>
+    <div class="action-title">Start Swim</div>
+    <div class="action-desc">Stopwatch, stroke selection, and save your record.</div>
+    <div class="action-arrow">Go <i data-lucide="arrow-right"></i></div>
+  </a>
+
+  <a class="action-card" href="{{ url_for('progress') }}">
+    <div class="action-top">
+      <div class="action-icon icon-blue"><i data-lucide="trending-up"></i></div>
+      <span class="action-tag">Stats</span>
+    </div>
+    <div class="action-title">View Progress</div>
+    <div class="action-desc">History, totals, personal bests, and charts.</div>
+    <div class="action-arrow">Go <i data-lucide="arrow-right"></i></div>
+  </a>
+
+  <a class="action-card" href="{{ url_for('players') }}">
+    <div class="action-top">
+      <div class="action-icon icon-gold"><i data-lucide="trophy"></i></div>
+      <span class="action-tag">Profiles</span>
+    </div>
+    <div class="action-title">Player Profiles</div>
+    <div class="action-desc">Learn from famous swimmers and master every stroke.</div>
+    <div class="action-arrow">Go <i data-lucide="arrow-right"></i></div>
+  </a>
+
+</div>
+
+<!-- ── Role Banner ── -->
+{% if user.role == "COACH" %}
+  <div class="role-banner coach">
+    <div class="role-banner-left">
+      <div class="role-banner-icon"><i data-lucide="graduation-cap"></i></div>
+      <div>
+        <div class="role-banner-title">Coach Tools</div>
+        <div class="role-banner-sub">Ranking, compare swimmers, export PDF reports.</div>
       </div>
     </div>
+    <a class="btn-role-coach" href="{{ url_for('coach_dashboard') }}">
+      <i data-lucide="layout-dashboard"></i> Open Coach Panel
+    </a>
   </div>
 
 {% elif user.role == "ADMIN" %}
-  <div class="mt-3">
-    <div class="card glass border-0 shadow-sm">
-      <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div>
-          <div class="fw-bold">🛠 Admin Tools</div>
-          <div class="text-muted small">Users, academies, monitoring, reports.</div>
-        </div>
-        <a class="btn btn-warning btn-sm" href="{{ url_for('admin_users') }}">Open Admin Panel</a>
+  <div class="role-banner admin">
+    <div class="role-banner-left">
+      <div class="role-banner-icon"><i data-lucide="shield-check"></i></div>
+      <div>
+        <div class="role-banner-title">Admin Tools</div>
+        <div class="role-banner-sub">Users, academies, monitoring, reports.</div>
       </div>
     </div>
+    <a class="btn-role-admin" href="{{ url_for('admin_users') }}">
+      <i data-lucide="settings-2"></i> Open Admin Panel
+    </a>
   </div>
 {% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+<script>lucide.createIcons();</script>
 {% endblock %}

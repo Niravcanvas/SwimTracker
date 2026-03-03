@@ -1,119 +1,238 @@
 {% extends "base.html" %}
-{% block title %}Players - Swim Tracker{% endblock %}
+{% block title %}Players – Swim Tracker{% endblock %}
+
+{% block head_extra %}
+<style>
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* ── Header ── */
+  .page-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif; font-size: 1.5rem;
+    font-weight: 800; color: var(--text-1); margin: 0 0 5px;
+  }
+  .page-sub { font-size: 13.5px; color: var(--text-3); margin: 0; }
+
+  /* Search */
+  .search-wrap { position: relative; }
+  .search-icon {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%); display: flex;
+    pointer-events: none; color: var(--text-3);
+  }
+  .search-icon svg { width: 15px; height: 15px; }
+  .search-input {
+    background: var(--navy-2); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-1);
+    font-family: 'DM Sans', sans-serif; font-size: 13.5px;
+    padding: 9px 14px 9px 36px; outline: none; width: 260px;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  .search-input::placeholder { color: var(--text-3); }
+  .search-input:focus {
+    border-color: rgba(0,194,168,0.4);
+    box-shadow: 0 0 0 3px rgba(0,194,168,0.08);
+    width: 300px;
+    transition: border-color 0.18s, box-shadow 0.18s, width 0.25s;
+  }
+
+  /* ── Player Grid ── */
+  .players-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    animation: fadeUp 0.35s 0.06s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @media (max-width: 991px) { .players-grid { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 560px)  { .players-grid { grid-template-columns: 1fr; } }
+
+  /* ── Player Card ── */
+  .player-card {
+    display: block; text-decoration: none;
+    background: var(--navy-2); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+    transition: transform 0.22s, border-color 0.22s, box-shadow 0.22s;
+  }
+  .player-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(0,194,168,0.25);
+    box-shadow: 0 14px 36px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,194,168,0.08);
+  }
+  .player-card:hover .player-photo { transform: scale(1.05); }
+  .player-card:hover .view-arrow { opacity: 1; transform: translateX(0); }
+
+  /* Cover */
+  .player-cover {
+    position: relative; height: 210px; overflow: hidden;
+  }
+  .player-photo {
+    width: 100%; height: 100%; object-fit: cover;
+    object-position: center top; display: block;
+    transition: transform 0.5s ease;
+  }
+  .cover-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(8,14,31,0.92) 0%,
+      rgba(8,14,31,0.3) 55%,
+      transparent 100%
+    );
+  }
+  .cover-bottom {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 16px 18px; z-index: 2;
+  }
+  .cover-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }
+  .cover-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600;
+    background: rgba(255,255,255,0.12); backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.9);
+  }
+  .cover-tag svg { width: 10px; height: 10px; }
+  .cover-name {
+    font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 800;
+    color: #fff; margin: 0 0 2px; line-height: 1.15;
+  }
+  .cover-meta { font-size: 11.5px; color: rgba(255,255,255,0.5); }
+
+  /* Card footer */
+  .player-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+  }
+  .footer-hint { font-size: 12px; color: var(--text-3); }
+  .view-arrow {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 600; color: var(--teal);
+    opacity: 0; transform: translateX(-5px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .view-arrow svg { width: 13px; height: 13px; }
+
+  /* Empty */
+  .empty-state {
+    background: var(--navy-2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 64px 24px; text-align: center;
+  }
+  .empty-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: var(--navy-3); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+  }
+  .empty-icon svg { width: 22px; height: 22px; color: var(--text-3); }
+  .empty-title { font-size: 14px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+  .empty-sub   { font-size: 13px; color: var(--text-3); }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
-  <div>
-    <h2 class="fw-bold mb-1">🏆 Player Profiles</h2>
-    <p class="text-muted mb-0">Famous swimmers and achievements.</p>
-  </div>
 
-  <div class="d-flex gap-2 flex-wrap">
-    <div class="input-group input-group-sm" style="max-width: 320px;">
-      <span class="input-group-text">🔎</span>
-      <input id="playerSearch" class="form-control"
-             placeholder="Search player name..."
-             oninput="filterPlayers()">
-    </div>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Player Profiles</h1>
+    <p class="page-sub">Famous swimmers and their achievements.</p>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon"><i data-lucide="search"></i></span>
+    <input id="playerSearch" class="search-input"
+           type="text" placeholder="Search player…"
+           oninput="filterPlayers()">
   </div>
 </div>
 
 {% if players|length == 0 %}
-  <div class="card glass border-0 shadow-sm">
-    <div class="card-body text-center text-muted py-5">
-      No players available.
-    </div>
+  <div class="empty-state">
+    <div class="empty-icon"><i data-lucide="users"></i></div>
+    <div class="empty-title">No players available</div>
+    <div class="empty-sub">Player profiles will appear here once added.</div>
   </div>
 {% else %}
-  <div class="row g-3">
+  <div class="players-grid">
     {% for p in players %}
-      <div class="col-md-6 col-lg-4 player-item">
-        <a href="{{ url_for('player_detail', player_id=p.player_id) }}"
-           class="text-decoration-none">
 
-          <div class="card glass border-0 shadow-sm h-100 player-card overflow-hidden">
+      {% set default_img = url_for('static', filename='img/players/default_player.jpg') %}
+      {% if p.photo_url %}
+        {% if p.photo_url.startswith('http') %}
+          {% set img_src = p.photo_url %}
+        {% elif p.photo_url.startswith('/static/') %}
+          {% set img_src = p.photo_url %}
+        {% else %}
+          {% set img_src = url_for('static', filename='img/players/' ~ p.photo_url) %}
+        {% endif %}
+      {% else %}
+        {% set img_src = default_img %}
+      {% endif %}
 
-            <div class="player-cover position-relative" style="height:230px;">
-
-              {% set default_img = url_for('static', filename='img/players/default_player.jpg') %}
-
-              {# Build image src safely: filename / full url / /static path #}
-              {% if p.photo_url %}
-                {% if p.photo_url.startswith('http') %}
-                  {% set img_src = p.photo_url %}
-                {% elif p.photo_url.startswith('/static/') %}
-                  {% set img_src = p.photo_url %}
-                {% else %}
-                  {% set img_src = url_for('static', filename='img/players/' ~ p.photo_url) %}
-                {% endif %}
-              {% else %}
-                {% set img_src = default_img %}
-              {% endif %}
-
-              <img
-                src="{{ img_src }}"
-                data-fallback="{{ default_img }}"
-                data-fallback-applied="0"
-                class="w-100 h-100 object-fit-cover player-img"
-                alt="{{ p.name }}"
-                loading="lazy"
-                decoding="async"
-              >
-
-              <div class="player-cover-overlay"></div>
-
-              <div class="position-absolute bottom-0 start-0 p-3 text-white w-100" style="z-index:2;">
-                <div class="d-flex flex-wrap gap-2 mb-2">
-                  <span class="badge bg-light text-dark">{{ p.federation }}</span>
-                  <span class="badge bg-light text-dark">{{ p.event }}</span>
-                </div>
-                <div class="fw-bold fs-5 player-name">{{ p.name }}</div>
-                <div class="opacity-75 small">
-                  Age: {{ p.age }} • Stroke: {{ p.main_stroke }}
-                </div>
-              </div>
+      <a class="player-card player-item"
+         href="{{ url_for('player_detail', player_id=p.player_id) }}">
+        <div class="player-cover">
+          <img class="player-photo"
+               src="{{ img_src }}"
+               data-fallback="{{ default_img }}"
+               data-fallback-applied="0"
+               alt="{{ p.name }}"
+               loading="lazy" decoding="async">
+          <div class="cover-overlay"></div>
+          <div class="cover-bottom">
+            <div class="cover-tags">
+              <span class="cover-tag">
+                <i data-lucide="building-2"></i> {{ p.federation }}
+              </span>
+              <span class="cover-tag">
+                <i data-lucide="waves"></i> {{ p.event }}
+              </span>
             </div>
-
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="text-muted small">Tap to view full profile</div>
-                <span class="badge text-bg-primary-subtle border">View</span>
-              </div>
-            </div>
-
+            <div class="cover-name player-name">{{ p.name }}</div>
+            <div class="cover-meta">Age {{ p.age }} &middot; {{ p.main_stroke }}</div>
           </div>
-        </a>
-      </div>
+        </div>
+        <div class="player-footer">
+          <span class="footer-hint">View full profile</span>
+          <span class="view-arrow">
+            Open <i data-lucide="arrow-right"></i>
+          </span>
+        </div>
+      </a>
+
     {% endfor %}
   </div>
 {% endif %}
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-function filterPlayers(){
-  const q = (document.getElementById("playerSearch")?.value || "")
-            .toLowerCase().trim();
+  lucide.createIcons();
 
-  document.querySelectorAll(".player-item").forEach(card => {
-    const name = (card.querySelector(".player-name")?.textContent || "")
-                 .toLowerCase();
-    card.style.display = name.includes(q) ? "" : "none";
-  });
-}
+  function filterPlayers() {
+    const q = (document.getElementById('playerSearch')?.value || '').toLowerCase().trim();
+    document.querySelectorAll('.player-item').forEach(card => {
+      const name = (card.querySelector('.player-name')?.textContent || '').toLowerCase();
+      card.style.display = name.includes(q) ? '' : 'none';
+    });
+  }
 
-// ✅ No blinking fallback: apply only once, never loop
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll("img.player-img").forEach(img => {
-    img.addEventListener("error", () => {
-      const fallback = img.dataset.fallback;
-      if (!fallback) return;
-
-      if (img.dataset.fallbackApplied === "1") return; // already tried fallback once
-      img.dataset.fallbackApplied = "1";
-      img.src = fallback;
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('img.player-photo').forEach(img => {
+      img.addEventListener('error', () => {
+        const fb = img.dataset.fallback;
+        if (!fb || img.dataset.fallbackApplied === '1') return;
+        img.dataset.fallbackApplied = '1';
+        img.src = fb;
+      });
     });
   });
-});
 </script>
 {% endblock %}

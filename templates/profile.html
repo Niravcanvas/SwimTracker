@@ -1,150 +1,319 @@
 {% extends "base.html" %}
-{% block title %}My Profile - Swim Tracker{% endblock %}
+{% block title %}My Profile – Swim Tracker{% endblock %}
+
+{% block head_extra %}
+<style>
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .page-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif; font-size: 1.5rem;
+    font-weight: 800; color: var(--text-1); margin: 0 0 5px;
+  }
+  .page-sub { font-size: 13.5px; color: var(--text-3); margin: 0; }
+
+  /* ── Layout ── */
+  .profile-layout {
+    display: grid; grid-template-columns: 340px 1fr; gap: 20px;
+    animation: fadeUp 0.35s 0.06s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @media (max-width: 900px) { .profile-layout { grid-template-columns: 1fr; } }
+
+  /* ── Panel shared ── */
+  .panel {
+    background: var(--navy-2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px;
+  }
+  .panel-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 12px; margin-bottom: 22px;
+  }
+  .panel-title {
+    font-family: 'Syne', sans-serif; font-size: 1rem;
+    font-weight: 700; color: var(--text-1); margin: 0 0 4px;
+  }
+  .panel-sub { font-size: 12px; color: var(--text-3); }
+  .panel-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 7px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    background: var(--navy-3); color: var(--text-3); border: 1px solid var(--border);
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .panel-tag svg { width: 11px; height: 11px; }
+
+  /* ── Summary panel ── */
+  .info-rows { display: flex; flex-direction: column; gap: 0; }
+  .info-row {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .info-row:last-of-type { border-bottom: none; }
+  .info-row-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text-3);
+  }
+  .info-row-value { font-size: 14px; font-weight: 600; color: var(--text-1); }
+
+  /* Status block */
+  .status-block {
+    background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px; margin-top: 16px;
+  }
+  .status-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text-3); margin-bottom: 12px;
+  }
+  .status-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+  .status-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 50px;
+    font-size: 11px; font-weight: 600;
+  }
+  .status-tag svg { width: 11px; height: 11px; }
+  .tag-role { background: var(--navy-2); color: var(--text-2); border: 1px solid var(--border); }
+  .tag-adv  { background: rgba(0,194,168,0.1); color: var(--teal); border: 1px solid rgba(0,194,168,0.2); }
+  .tag-beg  { background: rgba(100,150,255,0.1); color: #7aabff; border: 1px solid rgba(100,150,255,0.2); }
+  .tag-gold { background: rgba(245,197,66,0.1); color: var(--gold); border: 1px solid rgba(245,197,66,0.2); }
+  .status-note { font-size: 11.5px; color: var(--text-3); }
+
+  /* Goal bar */
+  .goal-block {
+    margin-top: 16px; padding: 16px 18px;
+    background: var(--navy-3); border: 1px solid var(--border); border-radius: 12px;
+  }
+  .goal-top {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 10px;
+  }
+  .goal-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; color: var(--text-2);
+  }
+  .goal-label svg { width: 13px; height: 13px; color: var(--teal); }
+  .goal-value {
+    font-family: 'Syne', sans-serif; font-size: 13px;
+    font-weight: 700; color: var(--teal);
+  }
+  .goal-track {
+    height: 5px; background: var(--navy-2);
+    border-radius: 99px; overflow: hidden;
+  }
+  .goal-fill {
+    height: 100%; width: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--teal), #0099ff);
+    box-shadow: 0 0 8px rgba(0,194,168,0.4);
+  }
+  .goal-hint { font-size: 11.5px; color: var(--text-3); margin-top: 7px; }
+
+  /* ── Edit panel ── */
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text-3);
+  }
+  .field-wrap { position: relative; display: flex; align-items: center; }
+  .field-icon {
+    position: absolute; left: 13px; display: flex;
+    pointer-events: none; color: var(--text-3);
+  }
+  .field-icon svg { width: 15px; height: 15px; }
+  .field-input {
+    width: 100%; background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-1);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    padding: 11px 14px 11px 38px; outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s; -webkit-appearance: none;
+  }
+  .field-input::placeholder { color: var(--text-3); }
+  .field-input:focus {
+    border-color: rgba(0,194,168,0.45);
+    box-shadow: 0 0 0 3px rgba(0,194,168,0.1);
+    background: #0f1a36;
+  }
+  .field-hint { font-size: 11.5px; color: var(--text-3); }
+
+  .form-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 14px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .btn-save {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%; padding: 12px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, var(--teal), #0099dd);
+    color: #fff; font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700; letter-spacing: 0.04em;
+    cursor: pointer; transition: opacity 0.18s, transform 0.18s, box-shadow 0.18s;
+    box-shadow: 0 4px 18px rgba(0,194,168,0.22);
+  }
+  .btn-save svg { width: 15px; height: 15px; }
+  .btn-save:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,194,168,0.32); }
+  .btn-save:active { transform: translateY(0); }
+
+  /* Tip */
+  .tip-block {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 15px 17px; border-radius: 11px; margin-top: 18px;
+    background: var(--teal-glow); border: 1px solid rgba(0,194,168,0.2);
+  }
+  .tip-icon {
+    width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+    background: rgba(0,194,168,0.2); border: 1px solid rgba(0,194,168,0.25);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tip-icon svg { width: 14px; height: 14px; color: var(--teal); }
+  .tip-title { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 3px; }
+  .tip-text  { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+
+<div class="page-header">
   <div>
-    <h2 class="fw-bold mb-1">👤 My Profile</h2>
-    <p class="text-muted mb-0">Update your personal details & set your goal.</p>
+    <h1 class="page-title">My Profile</h1>
+    <p class="page-sub">Update your personal details and set your goal.</p>
   </div>
-
-  <a class="btn btn-outline-primary btn-sm" href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
 </div>
 
-<div class="row g-3">
+<div class="profile-layout">
 
-  <!-- Summary -->
-  <div class="col-lg-5">
-    <div class="card glass border-0 shadow-sm h-100">
-      <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <h5 class="fw-bold mb-1">Account Summary</h5>
-            <div class="text-muted small">Your basic info & academy mapping</div>
+  <!-- ── Summary Panel ── -->
+  <div class="panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Account Summary</div>
+        <div class="panel-sub">Your basic info &amp; academy mapping</div>
+      </div>
+      <div class="panel-tag"><i data-lucide="user"></i> Profile</div>
+    </div>
+
+    <div class="info-rows">
+      <div class="info-row">
+        <div class="info-row-label">Name</div>
+        <div class="info-row-value">{{ user.name }}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-row-label">Email</div>
+        <div class="info-row-value">{{ user.email }}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-row-label">Academy</div>
+        <div class="info-row-value">{{ user.academy_name or "—" }}</div>
+      </div>
+    </div>
+
+    <div class="status-block">
+      <div class="status-label">Status</div>
+      <div class="status-tags">
+        <span class="status-tag tag-role">
+          <i data-lucide="shield"></i> {{ user.role }}
+        </span>
+        {% if user.level == "ADVANCED" %}
+          <span class="status-tag tag-adv">
+            <i data-lucide="zap"></i> Advanced
+          </span>
+        {% else %}
+          <span class="status-tag tag-beg">
+            <i data-lucide="sprout"></i> Beginner
+          </span>
+        {% endif %}
+        <span class="status-tag tag-gold">
+          <i data-lucide="medal"></i> {{ user.medals }} medals
+        </span>
+      </div>
+      <div class="status-note">Level &amp; medals are set by Coach / Admin.</div>
+    </div>
+
+    {% if user.goal_distance_m %}
+      <div class="goal-block">
+        <div class="goal-top">
+          <div class="goal-label">
+            <i data-lucide="target"></i> Goal Distance
           </div>
-          <span class="badge text-bg-light border">Profile</span>
+          <div class="goal-value">{{ "%.0f"|format(user.goal_distance_m) }} m</div>
+        </div>
+        <div class="goal-track"><div class="goal-fill"></div></div>
+        <div class="goal-hint">Track your progress in View Progress.</div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Edit Panel ── -->
+  <div class="panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Edit Details</div>
+        <div class="panel-sub">Used for your training profile.</div>
+      </div>
+      <div class="panel-tag"><i data-lucide="pencil"></i> Editable</div>
+    </div>
+
+    <form method="post">
+      <div class="form-grid">
+
+        <div class="field-group">
+          <label class="field-label">Age</label>
+          <div class="field-wrap">
+            <span class="field-icon"><i data-lucide="cake"></i></span>
+            <input class="field-input" type="number" min="1" name="age"
+                   value="{{ user.age or '' }}" placeholder="e.g. 18">
+          </div>
         </div>
 
-        <div class="mt-3">
-          <div class="profile-item">
-            <div class="text-muted small">Name</div>
-            <div class="fw-semibold">{{ user.name }}</div>
+        <div class="field-group">
+          <label class="field-label">Height (cm)</label>
+          <div class="field-wrap">
+            <span class="field-icon"><i data-lucide="ruler"></i></span>
+            <input class="field-input" type="number" step="0.1" min="1"
+                   name="height_cm"
+                   value="{{ user.height_cm or '' }}" placeholder="e.g. 170">
           </div>
+        </div>
 
-          <div class="profile-item">
-            <div class="text-muted small">Email</div>
-            <div class="fw-semibold">{{ user.email }}</div>
+        <div class="field-group">
+          <label class="field-label">Goal Distance (m)</label>
+          <div class="field-wrap">
+            <span class="field-icon"><i data-lucide="target"></i></span>
+            <input class="field-input" type="number" step="1" min="1"
+                   name="goal_distance_m"
+                   value="{{ user.goal_distance_m or '' }}" placeholder="e.g. 1000">
           </div>
+          <div class="field-hint">Set your weekly or monthly target.</div>
+        </div>
 
-          <div class="profile-item">
-            <div class="text-muted small">Academy</div>
-            <div class="fw-semibold">{{ user.academy_name or "—" }}</div>
-          </div>
+      </div>
 
-          <div class="mt-3 p-3 rounded-3 border bg-light">
-            <div class="text-muted small mb-2">Status</div>
+      <button class="btn-save" type="submit">
+        <i data-lucide="save"></i> Save Profile
+      </button>
+    </form>
 
-            <div class="d-flex flex-wrap gap-2">
-              <span class="badge text-bg-light border">Role: <b class="ms-1">{{ user.role }}</b></span>
-
-              {% if user.level == "ADVANCED" %}
-                <span class="badge text-bg-success">ADVANCED</span>
-              {% else %}
-                <span class="badge text-bg-primary-subtle border">BEGINNER</span>
-              {% endif %}
-
-              <span class="badge text-bg-light border">{{ user.medals }} 🥇 medals</span>
-            </div>
-
-            <div class="text-muted small mt-2">
-              Level/Medals are set by Coach/Admin.
-            </div>
-          </div>
-
-          {% if user.goal_distance_m %}
-            <div class="mt-3">
-              <div class="d-flex justify-content-between small text-muted mb-1">
-                <span>🎯 Goal Distance</span>
-                <span>{{ "%.0f"|format(user.goal_distance_m) }} m</span>
-              </div>
-              <div class="progress" style="height: 10px;">
-                <div class="progress-bar" role="progressbar" style="width: 100%"></div>
-              </div>
-              <div class="text-muted small mt-2">Goal is set. Track progress in “View Progress”.</div>
-            </div>
-          {% endif %}
-
+    <div class="tip-block">
+      <div class="tip-icon"><i data-lucide="lightbulb"></i></div>
+      <div>
+        <div class="tip-title">Goal Tip</div>
+        <div class="tip-text">
+          Set a goal distance to unlock progress tracking inside View Progress.
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Edit Form -->
-  <div class="col-lg-7">
-    <div class="card glass border-0 shadow-sm">
-      <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-          <div>
-            <h5 class="fw-bold mb-1">Edit Details</h5>
-            <div class="text-muted small">These details are used for your training profile.</div>
-          </div>
-          <span class="badge text-bg-light border">Editable</span>
-        </div>
-
-        <form method="post" class="row g-3 mt-2">
-
-          <div class="col-md-4">
-            <label class="form-label">Age</label>
-            <div class="input-group">
-              <span class="input-group-text">🎂</span>
-              <input class="form-control"
-                     type="number" min="1"
-                     name="age"
-                     value="{{ user.age or '' }}"
-                     placeholder="e.g. 18">
-            </div>
-          </div>
-
-          <div class="col-md-4">
-            <label class="form-label">Height (cm)</label>
-            <div class="input-group">
-              <span class="input-group-text">📏</span>
-              <input class="form-control"
-                     type="number" step="0.1" min="1"
-                     name="height_cm"
-                     value="{{ user.height_cm or '' }}"
-                     placeholder="e.g. 170">
-            </div>
-          </div>
-
-          <div class="col-md-4">
-            <label class="form-label">Goal Distance (m)</label>
-            <div class="input-group">
-              <span class="input-group-text">🎯</span>
-              <input class="form-control"
-                     type="number" step="1" min="1"
-                     name="goal_distance_m"
-                     value="{{ user.goal_distance_m or '' }}"
-                     placeholder="e.g. 1000">
-            </div>
-            <div class="form-text">Set your weekly or monthly goal.</div>
-          </div>
-
-          <div class="col-12 d-grid">
-            <button class="btn btn-success">Save Profile</button>
-          </div>
-        </form>
-
-        <div class="mt-3 p-3 rounded-3 border bg-light">
-          <div class="fw-semibold">Tip</div>
-          <div class="text-muted small">
-            Set a goal to unlock goal progress tracking inside “View Progress”.
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
 </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>lucide.createIcons();</script>
 {% endblock %}

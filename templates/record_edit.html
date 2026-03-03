@@ -1,158 +1,340 @@
 {% extends "base.html" %}
-{% block title %}Edit Record - Swim Tracker{% endblock %}
+{% block title %}Edit Record – Swim Tracker{% endblock %}
+
+{% block head_extra %}
+<style>
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .page-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif; font-size: 1.5rem;
+    font-weight: 800; color: var(--text-1); margin: 0 0 5px;
+  }
+  .page-sub { font-size: 13.5px; color: var(--text-3); margin: 0; }
+
+  .btn-action {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 9px; font-size: 13px; font-weight: 500;
+    text-decoration: none; border: 1px solid var(--border);
+    background: var(--navy-2); color: var(--text-2); transition: all 0.18s;
+  }
+  .btn-action:hover { color: var(--text-1); background: var(--navy-3); border-color: rgba(255,255,255,0.14); }
+  .btn-action svg { width: 14px; height: 14px; }
+
+  /* ── Layout ── */
+  .edit-layout {
+    display: grid; grid-template-columns: 1fr 300px; gap: 20px;
+    animation: fadeUp 0.35s 0.06s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @media (max-width: 860px) { .edit-layout { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--navy-2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px;
+  }
+  .panel-title {
+    font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+    color: var(--text-1); margin: 0 0 4px;
+  }
+  .panel-sub { font-size: 12px; color: var(--text-3); margin: 0 0 22px; }
+
+  /* Fields */
+  .form-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 16px; }
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  @media (max-width: 600px) {
+    .form-grid, .form-grid-2 { grid-template-columns: 1fr; }
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text-3);
+  }
+  .field-wrap { position: relative; display: flex; align-items: center; }
+  .field-icon {
+    position: absolute; left: 13px; display: flex;
+    pointer-events: none; color: var(--text-3);
+  }
+  .field-icon svg { width: 14px; height: 14px; }
+
+  .field-input {
+    width: 100%; background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-1);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    padding: 11px 14px 11px 38px; outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s; -webkit-appearance: none;
+  }
+  .field-input::placeholder { color: var(--text-3); }
+  .field-input:focus {
+    border-color: rgba(0,194,168,0.45);
+    box-shadow: 0 0 0 3px rgba(0,194,168,0.1); background: #0f1a36;
+  }
+  .field-input.no-icon { padding-left: 14px; }
+
+  .field-select {
+    width: 100%; background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-1);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    padding: 11px 36px 11px 14px; outline: none;
+    transition: border-color 0.18s; -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234e5878' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; background-size: 14px;
+  }
+  .field-select option { background: #0d1530; }
+  .field-select:focus { border-color: rgba(0,194,168,0.45); box-shadow: 0 0 0 3px rgba(0,194,168,0.1); }
+  .field-hint { font-size: 11.5px; color: var(--text-3); }
+
+  /* Distance preview */
+  .dist-preview {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 18px; border-radius: 12px;
+    background: var(--navy-3); border: 1px solid var(--border);
+    margin-bottom: 18px;
+  }
+  .dist-preview-left { display: flex; align-items: center; gap: 10px; }
+  .dist-preview-icon {
+    width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+    background: var(--teal-glow); border: 1px solid rgba(0,194,168,0.2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dist-preview-icon svg { width: 15px; height: 15px; color: var(--teal); }
+  .dist-preview-title { font-size: 13px; font-weight: 600; color: var(--text-1); margin-bottom: 2px; }
+  .dist-preview-sub   { font-size: 11.5px; color: var(--text-3); }
+  .dist-preview-val {
+    font-family: 'Syne', sans-serif; font-size: 1.4rem;
+    font-weight: 800; color: var(--teal);
+  }
+  .dist-preview-val span { font-size: 0.9rem; color: var(--text-3); margin-left: 3px; font-weight: 400; }
+
+  /* Time display chip */
+  .time-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 7px;
+    background: var(--navy-3); border: 1px solid var(--border);
+    font-size: 12px; color: var(--text-2);
+    margin-top: 6px;
+  }
+  .time-chip svg { width: 12px; height: 12px; color: var(--teal); }
+  .time-chip b { color: var(--teal); }
+
+  /* Save button */
+  .btn-save {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%; padding: 12px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, var(--teal), #0099dd);
+    color: #fff; font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700; letter-spacing: 0.04em;
+    cursor: pointer; transition: opacity 0.18s, transform 0.18s, box-shadow 0.18s;
+    box-shadow: 0 4px 18px rgba(0,194,168,0.22);
+  }
+  .btn-save svg { width: 15px; height: 15px; }
+  .btn-save:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,194,168,0.32); }
+
+  /* Helper panel */
+  .helper-header {
+    display: flex; align-items: center; gap: 9px; margin-bottom: 16px;
+  }
+  .helper-icon {
+    width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+    background: rgba(245,197,66,0.1); border: 1px solid rgba(245,197,66,0.2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .helper-icon svg { width: 14px; height: 14px; color: var(--gold); }
+  .helper-title { font-size: 14px; font-weight: 700; color: var(--text-1); }
+  .helper-sub   { font-size: 12px; color: var(--text-3); }
+
+  .helper-input-wrap { display: flex; gap: 8px; margin-bottom: 14px; }
+  .helper-input {
+    flex: 1; background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 9px; color: var(--text-1);
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    padding: 9px 12px; outline: none;
+    transition: border-color 0.18s;
+  }
+  .helper-input::placeholder { color: var(--text-3); }
+  .helper-input:focus { border-color: rgba(0,194,168,0.4); }
+
+  .btn-apply {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 9px 14px; border-radius: 9px; font-size: 12px; font-weight: 600;
+    color: var(--teal); background: var(--teal-glow);
+    border: 1px solid rgba(0,194,168,0.3); cursor: pointer;
+    transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-apply:hover { background: rgba(0,194,168,0.22); }
+  .btn-apply svg { width: 13px; height: 13px; }
+
+  .helper-example {
+    padding: 12px 14px; border-radius: 9px;
+    background: var(--navy-3); border: 1px solid var(--border);
+    font-size: 12px; color: var(--text-3); line-height: 1.6;
+  }
+  .helper-example b { color: var(--text-2); }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
-  <div>
-    <h2 class="fw-bold mb-1">✏️ Edit Swim Record</h2>
-    <p class="text-muted mb-0">Update date, stroke, time, laps, and pool length.</p>
-  </div>
 
-  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('progress') }}">← Back to Progress</a>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Edit Swim Record</h1>
+    <p class="page-sub">Update date, stroke, time, laps, and pool length.</p>
+  </div>
+  <a class="btn-action" href="{{ url_for('progress') }}">
+    <i data-lucide="arrow-left"></i> Back to Progress
+  </a>
 </div>
 
-<div class="card glass border-0 shadow-sm">
-  <div class="card-body p-4">
+<div class="edit-layout">
 
-    <div class="row g-3">
-      <!-- Form -->
-      <div class="col-lg-8">
-        <form method="post" class="row g-3" id="editForm">
+  <!-- ── Form Panel ── -->
+  <div class="panel">
+    <div class="panel-title">Record Details</div>
+    <div class="panel-sub">Edit the fields below and save your changes.</div>
 
-          <div class="col-md-4">
-            <label class="form-label">Date</label>
-            <input class="form-control" type="date" name="date" value="{{ rec.date }}" required>
-          </div>
+    <form method="post" id="editForm">
+      <div class="form-grid">
 
-          <div class="col-md-4">
-            <label class="form-label">Stroke</label>
-            <select class="form-select" name="stroke_type" required>
-              {% for s in strokes %}
-                <option value="{{ s }}" {% if rec.stroke_type == s %}selected{% endif %}>{{ s }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="col-md-4">
-            <label class="form-label">Time (milliseconds)</label>
-            <div class="input-group">
-              <span class="input-group-text">⏱</span>
-              <input id="timeMs" class="form-control" type="number" name="time_ms" min="1"
-                     value="{{ rec.time_ms }}" required>
-            </div>
-            <div class="text-muted small mt-1">
-              Current display: <b>{{ time_display }}</b>
-            </div>
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">Laps</label>
-            <div class="input-group">
-              <span class="input-group-text">🔁</span>
-              <input id="laps" class="form-control" type="number" name="laps" min="1"
-                     value="{{ rec.laps }}" required>
-            </div>
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">Pool Length (m)</label>
-            <select id="pool" class="form-select" name="pool_len">
-              <option value="25" {% if rec.pool_len == 25 %}selected{% endif %}>25</option>
-              <option value="50" {% if rec.pool_len == 50 %}selected{% endif %}>50</option>
-            </select>
-          </div>
-
-          <div class="col-12">
-            <div class="p-3 rounded-3 border bg-light">
-              <div class="d-flex justify-content-between flex-wrap gap-2">
-                <div>
-                  <div class="fw-semibold">Distance Preview</div>
-                  <div class="text-muted small">Laps × Pool Length</div>
-                </div>
-                <div class="fw-bold fs-5">
-                  <span id="distPreview">—</span> m
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12 d-grid">
-            <button class="btn btn-success">Save Changes</button>
-          </div>
-
-        </form>
-      </div>
-
-      <!-- Helper -->
-      <div class="col-lg-4">
-        <div class="p-3 rounded-3 border bg-light h-100">
-          <div class="fw-bold mb-1">🧮 Time Helper</div>
-          <div class="text-muted small mb-2">Convert MM:SS.ms to milliseconds.</div>
-
-          <div class="input-group input-group-sm mb-2">
-            <span class="input-group-text">MM:SS</span>
-            <input id="mmss" class="form-control" placeholder="Example: 01:32.50">
-            <button class="btn btn-outline-primary" type="button" id="btnApplyTime">Apply</button>
-          </div>
-
-          <div class="text-muted small">
-            Example: <b>01:32.50</b> = 1 minute 32.5 seconds.
+        <div class="field-group">
+          <label class="field-label">Date</label>
+          <div class="field-wrap">
+            <span class="field-icon"><i data-lucide="calendar"></i></span>
+            <input class="field-input" type="date" name="date"
+                   value="{{ rec.date }}" required>
           </div>
         </div>
+
+        <div class="field-group">
+          <label class="field-label">Stroke</label>
+          <select class="field-select" name="stroke_type" required>
+            {% for s in strokes %}
+              <option value="{{ s }}" {% if rec.stroke_type == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Time (milliseconds)</label>
+          <div class="field-wrap">
+            <span class="field-icon"><i data-lucide="timer"></i></span>
+            <input id="timeMs" class="field-input" type="number" name="time_ms"
+                   min="1" value="{{ rec.time_ms }}" required>
+          </div>
+          <div class="time-chip">
+            <i data-lucide="clock"></i> Display: <b>{{ time_display }}</b>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="form-grid-2">
+        <div class="field-group">
+          <label class="field-label">Laps</label>
+          <div class="field-wrap">
+            <span class="field-icon"><i data-lucide="repeat"></i></span>
+            <input id="laps" class="field-input" type="number" name="laps"
+                   min="1" value="{{ rec.laps }}" required>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Pool Length (m)</label>
+          <select id="pool" class="field-select" name="pool_len">
+            <option value="25" {% if rec.pool_len == 25 %}selected{% endif %}>25 m</option>
+            <option value="50" {% if rec.pool_len == 50 %}selected{% endif %}>50 m</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Distance preview -->
+      <div class="dist-preview">
+        <div class="dist-preview-left">
+          <div class="dist-preview-icon"><i data-lucide="ruler"></i></div>
+          <div>
+            <div class="dist-preview-title">Distance Preview</div>
+            <div class="dist-preview-sub">Laps × Pool Length</div>
+          </div>
+        </div>
+        <div class="dist-preview-val">
+          <span id="distPreview">—</span><span>m</span>
+        </div>
+      </div>
+
+      <button class="btn-save" type="submit">
+        <i data-lucide="save"></i> Save Changes
+      </button>
+    </form>
+  </div>
+
+  <!-- ── Helper Panel ── -->
+  <div class="panel">
+    <div class="helper-header">
+      <div class="helper-icon"><i data-lucide="calculator"></i></div>
+      <div>
+        <div class="helper-title">Time Helper</div>
+        <div class="helper-sub">Convert MM:SS.ms → milliseconds</div>
       </div>
     </div>
 
+    <div class="helper-input-wrap">
+      <input id="mmss" class="helper-input" type="text" placeholder="e.g. 01:32.50">
+      <button class="btn-apply" type="button" id="btnApplyTime">
+        <i data-lucide="arrow-right"></i> Apply
+      </button>
+    </div>
+
+    <div class="helper-example">
+      Example: <b>01:32.50</b><br>
+      = 1 minute 32.5 seconds<br>
+      = <b>92,500 ms</b>
+    </div>
   </div>
+
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-(function(){
-  function calcDistance(){
-    const lapsEl = document.getElementById("laps");
-    const poolEl = document.getElementById("pool");
-    const outEl  = document.getElementById("distPreview");
-    if (!lapsEl || !poolEl || !outEl) return;
+  lucide.createIcons();
 
-    const laps = parseFloat(lapsEl.value || "0");
-    const pool = parseFloat(poolEl.value || "0");
-    const d = Math.max(0, laps) * Math.max(0, pool);
-    outEl.textContent = d ? String(Math.round(d)) : "—";
-  }
-
-  function applyTime(){
-    const input = document.getElementById("mmss");
-    const timeMs = document.getElementById("timeMs");
-    if (!input || !timeMs) return;
-
-    const v = (input.value || "").trim();
-
-    // expects MM:SS or MM:SS.xx
-    const parts = v.split(":");
-    if (parts.length !== 2){
-      alert("Format should be MM:SS or MM:SS.ms (example 01:32.50)");
-      return;
+  (function () {
+    function calcDistance() {
+      const laps = parseFloat(document.getElementById('laps')?.value || '0');
+      const pool = parseFloat(document.getElementById('pool')?.value || '0');
+      const d    = Math.max(0, laps) * Math.max(0, pool);
+      const el   = document.getElementById('distPreview');
+      if (el) el.textContent = d ? String(Math.round(d)) : '—';
     }
 
-    const mm = parseInt(parts[0], 10);
-    const ss = parseFloat(parts[1]);
-
-    if (Number.isNaN(mm) || Number.isNaN(ss) || mm < 0 || ss < 0){
-      alert("Invalid time format.");
-      return;
+    function applyTime() {
+      const v  = (document.getElementById('mmss')?.value || '').trim();
+      const parts = v.split(':');
+      if (parts.length !== 2) {
+        alert('Format should be MM:SS or MM:SS.ms (e.g. 01:32.50)'); return;
+      }
+      const mm = parseInt(parts[0], 10);
+      const ss = parseFloat(parts[1]);
+      if (isNaN(mm) || isNaN(ss) || mm < 0 || ss < 0) {
+        alert('Invalid time format.'); return;
+      }
+      const ms = Math.round((mm * 60 + ss) * 1000);
+      const el = document.getElementById('timeMs');
+      if (el) el.value = ms;
     }
 
-    const ms = Math.round((mm * 60 + ss) * 1000);
-    timeMs.value = ms;
-  }
-
-  // Bind events safely (prevents editor lint errors and keeps JS clean)
-  document.getElementById("laps")?.addEventListener("input", calcDistance);
-  document.getElementById("pool")?.addEventListener("change", calcDistance);
-  document.getElementById("btnApplyTime")?.addEventListener("click", applyTime);
-
-  calcDistance();
-})();
+    document.getElementById('laps')?.addEventListener('input', calcDistance);
+    document.getElementById('pool')?.addEventListener('change', calcDistance);
+    document.getElementById('btnApplyTime')?.addEventListener('click', applyTime);
+    calcDistance();
+  })();
 </script>
 {% endblock %}

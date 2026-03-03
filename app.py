@@ -894,6 +894,6 @@ if __name__ == "__main__":
     # ✅ Coolify/production ready: binds to 0.0.0.0 and reads PORT from environment
     app.run(
         host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000)),
+        port=int(os.environ.get("PORT", 4000)),
         debug=False
     )
