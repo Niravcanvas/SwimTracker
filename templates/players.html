@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Players - Swim Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h2 class="fw-bold mb-1">🏆 Player Profiles</h2>
+    <p class="text-muted mb-0">Famous swimmers and achievements.</p>
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap">
+    <div class="input-group input-group-sm" style="max-width: 320px;">
+      <span class="input-group-text">🔎</span>
+      <input id="playerSearch" class="form-control"
+             placeholder="Search player name..."
+             oninput="filterPlayers()">
+    </div>
+  </div>
+</div>
+
+{% if players|length == 0 %}
+  <div class="card glass border-0 shadow-sm">
+    <div class="card-body text-center text-muted py-5">
+      No players available.
+    </div>
+  </div>
+{% else %}
+  <div class="row g-3">
+    {% for p in players %}
+      <div class="col-md-6 col-lg-4 player-item">
+        <a href="{{ url_for('player_detail', player_id=p.player_id) }}"
+           class="text-decoration-none">
+
+          <div class="card glass border-0 shadow-sm h-100 player-card overflow-hidden">
+
+            <div class="player-cover position-relative" style="height:230px;">
+
+              {% set default_img = url_for('static', filename='img/players/default_player.jpg') %}
+
+              {# Build image src safely: filename / full url / /static path #}
+              {% if p.photo_url %}
+                {% if p.photo_url.startswith('http') %}
+                  {% set img_src = p.photo_url %}
+                {% elif p.photo_url.startswith('/static/') %}
+                  {% set img_src = p.photo_url %}
+                {% else %}
+                  {% set img_src = url_for('static', filename='img/players/' ~ p.photo_url) %}
+                {% endif %}
+              {% else %}
+                {% set img_src = default_img %}
+              {% endif %}
+
+              <img
+                src="{{ img_src }}"
+                data-fallback="{{ default_img }}"
+                data-fallback-applied="0"
+                class="w-100 h-100 object-fit-cover player-img"
+                alt="{{ p.name }}"
+                loading="lazy"
+                decoding="async"
+              >
+
+              <div class="player-cover-overlay"></div>
+
+              <div class="position-absolute bottom-0 start-0 p-3 text-white w-100" style="z-index:2;">
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                  <span class="badge bg-light text-dark">{{ p.federation }}</span>
+                  <span class="badge bg-light text-dark">{{ p.event }}</span>
+                </div>
+                <div class="fw-bold fs-5 player-name">{{ p.name }}</div>
+                <div class="opacity-75 small">
+                  Age: {{ p.age }} • Stroke: {{ p.main_stroke }}
+                </div>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small">Tap to view full profile</div>
+                <span class="badge text-bg-primary-subtle border">View</span>
+              </div>
+            </div>
+
+          </div>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterPlayers(){
+  const q = (document.getElementById("playerSearch")?.value || "")
+            .toLowerCase().trim();
+
+  document.querySelectorAll(".player-item").forEach(card => {
+    const name = (card.querySelector(".player-name")?.textContent || "")
+                 .toLowerCase();
+    card.style.display = name.includes(q) ? "" : "none";
+  });
+}
+
+// ✅ No blinking fallback: apply only once, never loop
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("img.player-img").forEach(img => {
+    img.addEventListener("error", () => {
+      const fallback = img.dataset.fallback;
+      if (!fallback) return;
+
+      if (img.dataset.fallbackApplied === "1") return; // already tried fallback once
+      img.dataset.fallbackApplied = "1";
+      img.src = fallback;
+    });
+  });
+});
+</script>
+{% endblock %}

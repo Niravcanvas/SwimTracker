@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}{{ p.name }} - Player Profile{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h2 class="fw-bold mb-0">🏆 Player Profile</h2>
+    <div class="text-muted small">Famous swimmers and their achievements</div>
+  </div>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('players') }}">← Back to Players</a>
+</div>
+
+{% set default_img = url_for('static', filename='img/players/default_player.jpg') %}
+
+{# Build image src safely: filename / full url / /static path #}
+{% if p.photo_url %}
+  {% if p.photo_url.startswith('http') %}
+    {% set img_src = p.photo_url %}
+  {% elif p.photo_url.startswith('/static/') %}
+    {% set img_src = p.photo_url %}
+  {% else %}
+    {% set img_src = url_for('static', filename='img/players/' ~ p.photo_url) %}
+  {% endif %}
+{% else %}
+  {% set img_src = default_img %}
+{% endif %}
+
+<div class="card border-0 shadow-sm overflow-hidden glass">
+  <div class="row g-0">
+
+    <!-- Image -->
+    <div class="col-md-5 position-relative" style="min-height:320px;">
+      <img
+        src="{{ img_src }}"
+        data-fallback="{{ default_img }}"
+        data-fallback-applied="0"
+        class="w-100 h-100 object-fit-cover"
+        alt="{{ p.name }}"
+        loading="eager"
+        decoding="async"
+        style="min-height:320px;"
+      >
+
+      <!-- ✅ overlay is behind text but over image nicely -->
+      <div class="player-overlay"></div>
+
+      <div class="position-absolute bottom-0 start-0 p-4 text-white" style="z-index:2;">
+        <div class="d-flex flex-wrap gap-2 mb-2">
+          <span class="badge bg-light text-dark">{{ p.federation }}</span>
+          <span class="badge bg-light text-dark">{{ p.event }}</span>
+        </div>
+        <h3 class="fw-bold mb-0">{{ p.name }}</h3>
+        <div class="opacity-75 small">Elite swimmer profile</div>
+      </div>
+    </div>
+
+    <!-- Details -->
+    <div class="col-md-7">
+      <div class="card-body p-4 p-md-5">
+
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <div>
+            <h4 class="fw-bold mb-1">{{ p.name }}</h4>
+            <div class="text-muted">{{ p.federation }} • {{ p.event }}</div>
+          </div>
+          <span class="badge text-bg-light border">Professional</span>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="info-card">
+              <div class="info-icon">🎂</div>
+              <div>
+                <div class="text-muted small">Age</div>
+                <div class="fw-bold">{{ p.age }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6">
+            <div class="info-card">
+              <div class="info-icon">🏊</div>
+              <div>
+                <div class="text-muted small">Main Stroke</div>
+                <div class="fw-bold">{{ p.main_stroke }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="info-card">
+              <div class="info-icon">🥇</div>
+              <div>
+                <div class="text-muted small">Olympic Medals</div>
+                <div class="fw-bold">{{ p.medals }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6">
+            <div class="info-card">
+              <div class="info-icon">⏱</div>
+              <div>
+                <div class="text-muted small">Best Time</div>
+                <div class="fw-bold">{{ p.best_time }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6">
+            <div class="info-card">
+              <div class="info-icon">🌍</div>
+              <div>
+                <div class="text-muted small">World Records</div>
+                <div class="fw-bold">{{ p.world_records }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 p-3 rounded-3 bg-light border">
+          <div class="fw-semibold">Tip</div>
+          <div class="text-muted small">
+            Try training the same main stroke and track your timings in the Swim Tracker.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ✅ No blinking fallback: apply only once
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("img[data-fallback]").forEach(img => {
+    img.addEventListener("error", () => {
+      const fallback = img.dataset.fallback;
+      if (!fallback) return;
+
+      if (img.dataset.fallbackApplied === "1") return;
+      img.dataset.fallbackApplied = "1";
+      img.src = fallback;
+    });
+  });
+});
+</script>
+{% endblock %}

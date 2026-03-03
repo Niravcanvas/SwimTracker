@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Swim Tracker{% endblock %}
+
+{% block head_extra %}
+  <script defer src="{{ url_for('static', filename='js/stopwatch.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h2 class="fw-bold mb-1">⏱ Swim Tracker</h2>
+    <p class="text-muted mb-0">Start the stopwatch, select stroke, enter laps, and save your record.</p>
+  </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('progress') }}">📈 View Progress</a>
+</div>
+
+<div class="row g-3">
+  <!-- Stopwatch + Form -->
+  <div class="col-lg-8">
+    <div class="card glass border-0 shadow-sm overflow-hidden">
+      <div class="card-body p-4 p-md-5">
+
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <h4 class="fw-bold mb-1">Stopwatch</h4>
+            <div class="text-muted small">Tap Start → Stop → Save.</div>
+          </div>
+          <span id="swStatus" class="badge text-bg-light border">Ready</span>
+        </div>
+
+        <div class="stopwatch-screen my-3">
+          <div class="display-time" id="displayTime">00:00.00</div>
+          <div class="text-muted small">Time</div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap mt-2">
+          <button class="btn btn-primary" type="button" id="btnStart">▶ Start</button>
+          <button class="btn btn-warning" type="button" id="btnStop">⏸ Stop</button>
+          <button class="btn btn-outline-secondary" type="button" id="btnReset">↻ Reset</button>
+        </div>
+
+        <hr class="my-4">
+
+        <form method="post" onsubmit="return validateSave()">
+          <input type="hidden" name="time_ms" id="timeMs" value="0">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Stroke Type</label>
+              <select class="form-select" name="stroke_type" required>
+                {% for s in strokes %}
+                  <option value="{{ s }}">{{ s }}</option>
+                {% endfor %}
+              </select>
+              <div class="form-text">Select the stroke used for this swim.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Pool Length</label>
+              <select class="form-select" name="pool_len" id="poolLen">
+                <option value="25" selected>25 m</option>
+                <option value="50">50 m</option>
+              </select>
+              <div class="form-text">Standard pools are 25m or 50m.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Laps</label>
+              <input class="form-control" type="number" name="laps" id="laps" min="1" value="10" required>
+              <div class="form-text">Distance = laps × pool length.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Summary</label>
+              <div class="p-3 rounded-3 border bg-light h-100">
+                <div class="d-flex justify-content-between">
+                  <span class="text-muted">Distance</span>
+                  <span class="fw-semibold" id="distancePreview">250 m</span>
+                </div>
+                <div class="d-flex justify-content-between mt-1">
+                  <span class="text-muted">Time</span>
+                  <span class="fw-semibold" id="timePreview">00:00.00</span>
+                </div>
+                <div class="text-muted small mt-2">
+                  Tip: Stop the timer before saving.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button id="btnSave" class="btn btn-success mt-3 w-100">💾 Save Record</button>
+          <div id="saveWarn" class="text-danger small mt-2 d-none">
+            Please start and stop the stopwatch before saving.
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Tips / Help -->
+  <div class="col-lg-4">
+    <div class="card glass border-0 shadow-sm h-100">
+      <div class="card-body p-4">
+        <h5 class="fw-bold mb-2">✅ Tips</h5>
+        <ul class="text-muted small mb-0">
+          <li>Use <b>Start</b> when you push off.</li>
+          <li>Use <b>Stop</b> when you finish.</li>
+          <li>Choose correct <b>Stroke</b> before saving.</li>
+          <li>Check <b>laps</b> and <b>pool length</b> for correct distance.</li>
+        </ul>
+
+        <div class="mt-3 p-3 rounded-3 border bg-light">
+          <div class="fw-semibold">Need editing later?</div>
+          <div class="text-muted small">You can edit any record in “Progress”.</div>
+          <a class="btn btn-sm btn-outline-primary mt-2" href="{{ url_for('progress') }}">Open Progress</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  function calcDistance(){
+    const lapsEl = document.getElementById("laps");
+    const poolEl = document.getElementById("poolLen");
+    const outEl  = document.getElementById("distancePreview");
+    if (!lapsEl || !poolEl || !outEl) return;
+
+    const laps = parseFloat(lapsEl.value || "0");
+    const pool = parseFloat(poolEl.value || "0");
+    const d = Math.max(0, laps) * Math.max(0, pool);
+    outEl.textContent = (d ? Math.round(d) : 0) + " m";
+  }
+
+  document.getElementById("laps")?.addEventListener("input", calcDistance);
+  document.getElementById("poolLen")?.addEventListener("change", calcDistance);
+  calcDistance();
+
+  // mirror stopwatch display into summary (no setInterval leak on some browsers)
+  const tOut = document.getElementById("timePreview");
+  const tSrc = document.getElementById("displayTime");
+  const timeSyncTimer = setInterval(() => {
+    if (tOut && tSrc) tOut.textContent = (tSrc.textContent || "00:00.00");
+    // if page changes / element gone, stop timer
+    if (!document.body.contains(tOut) || !document.body.contains(tSrc)) clearInterval(timeSyncTimer);
+  }, 200);
+
+  // validate before submit
+  window.validateSave = function(){
+    const ms = parseInt(document.getElementById("timeMs")?.value || "0", 10);
+    const warn = document.getElementById("saveWarn");
+    if (!ms || ms <= 0){
+      warn?.classList.remove("d-none");
+      return false;
+    }
+    warn?.classList.add("d-none");
+    return true;
+  }
+
+  // status badge updates
+  const statusEl = document.getElementById("swStatus");
+  document.getElementById("btnStart")?.addEventListener("click", () => {
+    if (!statusEl) return;
+    statusEl.className = "badge text-bg-success";
+    statusEl.textContent = "Running";
+  });
+  document.getElementById("btnStop")?.addEventListener("click", () => {
+    if (!statusEl) return;
+    statusEl.className = "badge text-bg-warning";
+    statusEl.textContent = "Stopped";
+  });
+  document.getElementById("btnReset")?.addEventListener("click", () => {
+    if (!statusEl) return;
+    statusEl.className = "badge text-bg-light border";
+    statusEl.textContent = "Ready";
+    document.getElementById("saveWarn")?.classList.add("d-none");
+  });
+})();
+</script>
+{% endblock %}

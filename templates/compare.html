@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% block title %}Compare Swimmers{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h2 class="fw-bold mb-1">🆚 Compare Swimmers</h2>
+    <p class="text-muted mb-0">Side-by-side comparison of distance, best time, and consistency.</p>
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('coach_dashboard') }}">← Coach</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('coach_ranking') }}">📈 Ranking</a>
+  </div>
+</div>
+
+<!-- Compare Form -->
+<div class="card glass border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+      <div>
+        <h5 class="fw-bold mb-0">Select swimmers</h5>
+        <div class="text-muted small">Choose two different swimmers to compare.</div>
+      </div>
+      <span class="badge text-bg-light border">Comparison</span>
+    </div>
+
+    <form method="post" class="row g-2" onsubmit="return canSubmitCompare();">
+      <div class="col-md-5">
+        <label class="form-label small text-muted mb-1">Swimmer A</label>
+        <select id="user_a" class="form-select" name="user_a" required onchange="ensureDifferent()">
+          {% for s in swimmers %}
+            <option value="{{ s.user_id }}"
+              {% if compare_data and compare_data.a.user_id == s.user_id %}selected{% endif %}>
+              {{ s.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-5">
+        <label class="form-label small text-muted mb-1">Swimmer B</label>
+        <select id="user_b" class="form-select" name="user_b" required onchange="ensureDifferent()">
+          {% for s in swimmers %}
+            <option value="{{ s.user_id }}"
+              {% if compare_data and compare_data.b.user_id == s.user_id %}selected{% endif %}>
+              {{ s.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2 d-grid align-items-end">
+        <label class="form-label small text-muted mb-1 d-none d-md-block">&nbsp;</label>
+        <button id="btnCompare" class="btn btn-primary">Compare</button>
+      </div>
+
+      <div id="sameWarn" class="text-danger small mt-1 d-none">
+        Please select two different swimmers.
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if compare_data %}
+{% set a = compare_data.a %}
+{% set b = compare_data.b %}
+
+<!-- Hidden compare meta (NO Jinja inside JS) -->
+<div id="compareMeta"
+     data-a-dist="{{ a.total_dist }}"
+     data-b-dist="{{ b.total_dist }}"
+     data-a-best="{{ a.best_time }}"
+     data-b-best="{{ b.best_time }}">
+</div>
+
+<!-- Winner chips -->
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <div class="card glass border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="text-muted small">Distance Winner</div>
+            {% if a.total_dist > b.total_dist %}
+              <div class="fw-bold">🏆 {{ a.name }}</div>
+              <div class="text-muted small">Leads by {{ "%.0f"|format(a.total_dist - b.total_dist) }} m</div>
+            {% elif b.total_dist > a.total_dist %}
+              <div class="fw-bold">🏆 {{ b.name }}</div>
+              <div class="text-muted small">Leads by {{ "%.0f"|format(b.total_dist - a.total_dist) }} m</div>
+            {% else %}
+              <div class="fw-bold">🤝 Tie</div>
+              <div class="text-muted small">Same total distance</div>
+            {% endif %}
+          </div>
+          <span class="badge text-bg-light border">Total Distance</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card glass border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="text-muted small">Best Time Winner</div>
+            <div class="fw-bold" id="bestTimeWinner">—</div>
+            <div class="text-muted small" id="bestTimeNote"></div>
+          </div>
+          <span class="badge text-bg-light border">Fastest</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Compare Cards -->
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card glass border-0 shadow-sm h-100 compare-card" id="cardA">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <h5 class="fw-bold mb-0">{{ a.name }}</h5>
+            <div class="text-muted small">Swimmer A</div>
+          </div>
+          <span class="badge text-bg-light border">A</span>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap mb-3">
+          {% if a.level == "ADVANCED" %}
+            <span class="badge text-bg-success">ADVANCED</span>
+          {% else %}
+            <span class="badge text-bg-primary-subtle border">BEGINNER</span>
+          {% endif %}
+          <span class="badge text-bg-light border">{{ a.medals }} 🥇</span>
+          <span class="badge text-bg-light border">{{ a.swims }} swims</span>
+        </div>
+
+        <div class="list-group list-group-flush glass-list">
+          <div class="list-group-item d-flex justify-content-between">
+            <span class="text-muted">Total Distance</span>
+            <span class="fw-semibold">{{ "%.0f"|format(a.total_dist) }} m</span>
+          </div>
+          <div class="list-group-item d-flex justify-content-between">
+            <span class="text-muted">Best Time</span>
+            <span class="fw-semibold" id="aBest">{{ a.best_time }}</span>
+          </div>
+          <div class="list-group-item d-flex justify-content-between">
+            <span class="text-muted">Average Time</span>
+            <span class="fw-semibold">{{ a.avg_time }}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card glass border-0 shadow-sm h-100 compare-card" id="cardB">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <h5 class="fw-bold mb-0">{{ b.name }}</h5>
+            <div class="text-muted small">Swimmer B</div>
+          </div>
+          <span class="badge text-bg-light border">B</span>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap mb-3">
+          {% if b.level == "ADVANCED" %}
+            <span class="badge text-bg-success">ADVANCED</span>
+          {% else %}
+            <span class="badge text-bg-primary-subtle border">BEGINNER</span>
+          {% endif %}
+          <span class="badge text-bg-light border">{{ b.medals }} 🥇</span>
+          <span class="badge text-bg-light border">{{ b.swims }} swims</span>
+        </div>
+
+        <div class="list-group list-group-flush glass-list">
+          <div class="list-group-item d-flex justify-content-between">
+            <span class="text-muted">Total Distance</span>
+            <span class="fw-semibold">{{ "%.0f"|format(b.total_dist) }} m</span>
+          </div>
+          <div class="list-group-item d-flex justify-content-between">
+            <span class="text-muted">Best Time</span>
+            <span class="fw-semibold" id="bBest">{{ b.best_time }}</span>
+          </div>
+          <div class="list-group-item d-flex justify-content-between">
+            <span class="text-muted">Average Time</span>
+            <span class="fw-semibold">{{ b.avg_time }}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function ensureDifferent(){
+  const a = document.getElementById("user_a");
+  const b = document.getElementById("user_b");
+  const warn = document.getElementById("sameWarn");
+  const btn = document.getElementById("btnCompare");
+
+  if (!a || !b || !warn || !btn) return;
+
+  const same = (a.value && b.value && a.value === b.value);
+  warn.classList.toggle("d-none", !same);
+  btn.disabled = same;
+}
+
+function canSubmitCompare(){
+  const a = document.getElementById("user_a");
+  const b = document.getElementById("user_b");
+  if (!a || !b) return true;
+  if (a.value === b.value){
+    ensureDifferent();
+    return false;
+  }
+  return true;
+}
+
+// Parse "MM:SS.xx" to milliseconds. Returns null if invalid / "—"
+function parseTimeToMs(t){
+  if (!t) return null;
+  t = String(t).trim();
+  if (t === "—") return null;
+
+  const parts = t.split(":");
+  if (parts.length !== 2) return null;
+
+  const mm = parseInt(parts[0], 10);
+  const ss = parseFloat(parts[1]);
+
+  if (Number.isNaN(mm) || Number.isNaN(ss)) return null;
+  return Math.round((mm * 60 + ss) * 1000);
+}
+
+(function initCompareUI(){
+  ensureDifferent();
+
+  const meta = document.getElementById("compareMeta");
+  if (!meta) return; // no compare_data yet
+
+  const aDist = parseFloat(meta.dataset.aDist || "0");
+  const bDist = parseFloat(meta.dataset.bDist || "0");
+  const aBest = meta.dataset.aBest || "—";
+  const bBest = meta.dataset.bBest || "—";
+
+  const winnerEl = document.getElementById("bestTimeWinner");
+  const noteEl = document.getElementById("bestTimeNote");
+  const cardA = document.getElementById("cardA");
+  const cardB = document.getElementById("cardB");
+
+  // Distance winner highlight
+  if (aDist > bDist) cardA?.classList.add("winner-card");
+  else if (bDist > aDist) cardB?.classList.add("winner-card");
+
+  // Best-time winner
+  const aMs = parseTimeToMs(aBest);
+  const bMs = parseTimeToMs(bBest);
+
+  if (!winnerEl || !noteEl) return;
+
+  if (aMs === null && bMs === null){
+    winnerEl.textContent = "—";
+    noteEl.textContent = "No best-time data available yet.";
+    return;
+  }
+  if (aMs !== null && bMs === null){
+    winnerEl.textContent = "⚡ Swimmer A";
+    noteEl.textContent = "Swimmer B has no time data.";
+    cardA?.classList.add("winner-time");
+    return;
+  }
+  if (bMs !== null && aMs === null){
+    winnerEl.textContent = "⚡ Swimmer B";
+    noteEl.textContent = "Swimmer A has no time data.";
+    cardB?.classList.add("winner-time");
+    return;
+  }
+
+  if (aMs < bMs){
+    winnerEl.textContent = "⚡ Swimmer A";
+    noteEl.textContent = "Lower time is better.";
+    cardA?.classList.add("winner-time");
+  } else if (bMs < aMs){
+    winnerEl.textContent = "⚡ Swimmer B";
+    noteEl.textContent = "Lower time is better.";
+    cardB?.classList.add("winner-time");
+  } else {
+    winnerEl.textContent = "🤝 Tie";
+    noteEl.textContent = "Both have the same best time.";
+  }
+})();
+</script>
+{% endblock %}

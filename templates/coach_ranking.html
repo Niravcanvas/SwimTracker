@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Ranking{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h2 class="fw-bold mb-1">📋 Ranking List</h2>
+    <p class="text-muted mb-0">Ranked by total distance. Best time included.</p>
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('coach_dashboard') }}">← Coach</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('compare') }}">🆚 Compare</a>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="card glass border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-muted small">Total Swimmers</div>
+            <div class="display-6 fw-bold mb-0">{{ rows|length }}</div>
+          </div>
+          <div class="stat-icon">👥</div>
+        </div>
+        <div class="text-muted small mt-2">Count based on available ranking rows.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card glass border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-muted small">Top Swimmer</div>
+            {% if rows|length > 0 %}
+              <div class="fw-bold">{{ rows[0].name }}</div>
+              <div class="text-muted small">Distance: {{ "%.0f"|format(rows[0].total_dist) }} m</div>
+            {% else %}
+              <div class="text-muted">—</div>
+            {% endif %}
+          </div>
+          <div class="stat-icon">🏆</div>
+        </div>
+        <div class="text-muted small mt-2">Based on total distance.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card glass border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="w-100">
+            <div class="text-muted small">Search</div>
+            <div class="input-group input-group-sm mt-2">
+              <span class="input-group-text">🔎</span>
+              <input id="rankSearch" class="form-control" placeholder="Search swimmer name..." oninput="filterRanks()">
+            </div>
+          </div>
+          <div class="stat-icon ms-2">⚡</div>
+        </div>
+        <div class="text-muted small mt-2">Filters table instantly.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ranking Table -->
+<div class="card glass border-0 shadow-sm">
+  <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <h5 class="fw-bold mb-0">🏊 Ranking Table</h5>
+      <div class="text-muted small">Top swimmers first.</div>
+    </div>
+    <span class="badge text-bg-light border">Distance Leaderboard</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table align-middle mb-0" id="rankTable">
+      <thead class="table-light">
+        <tr>
+          <th style="width:90px;">Rank</th>
+          <th>Name</th>
+          <th style="width:140px;">Level</th>
+          <th style="width:120px;">Medals</th>
+          <th class="text-end" style="width:170px;">Total Distance</th>
+          <th style="width:140px;">Best Time</th>
+        </tr>
+      </thead>
+
+      <tbody>
+      {% if rows|length == 0 %}
+        <tr>
+          <td colspan="6" class="text-center text-muted py-5">
+            No ranking data yet. Ask swimmers to add swim records.
+          </td>
+        </tr>
+      {% else %}
+        {% for r in rows %}
+          <tr class="rank-row">
+            <td>
+              {% if r.rank == 1 %}
+                <span class="badge text-bg-warning">🏆 #1</span>
+              {% elif r.rank == 2 %}
+                <span class="badge text-bg-secondary">🥈 #2</span>
+              {% elif r.rank == 3 %}
+                <span class="badge text-bg-dark">🥉 #3</span>
+              {% else %}
+                <span class="badge text-bg-light border">#{{ r.rank }}</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <div class="fw-semibold rank-name">{{ r.name }}</div>
+              <div class="text-muted small">Swimmer</div>
+            </td>
+
+            <td>
+              {% if r.level == "ADVANCED" %}
+                <span class="badge text-bg-success">ADVANCED</span>
+              {% else %}
+                <span class="badge text-bg-primary-subtle border">BEGINNER</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <span class="badge text-bg-light border">{{ r.medals }} 🥇</span>
+            </td>
+
+            <td class="text-end fw-semibold">
+              {{ "%.0f"|format(r.total_dist) }} m
+            </td>
+
+            <td class="fw-semibold">
+              {{ r.best_time }}
+            </td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card-body pt-3">
+    <div class="text-muted small">
+      Note: Ranking is based on total distance. Best time is the fastest recorded swim time.
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterRanks(){
+  const q = (document.getElementById("rankSearch")?.value || "").toLowerCase().trim();
+  document.querySelectorAll("#rankTable tbody .rank-row").forEach(row => {
+    const name = (row.querySelector(".rank-name")?.textContent || "").toLowerCase();
+    row.style.display = name.includes(q) ? "" : "none";
+  });
+}
+</script>
+{% endblock %}

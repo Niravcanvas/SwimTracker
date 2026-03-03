@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}My Profile - Swim Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h2 class="fw-bold mb-1">👤 My Profile</h2>
+    <p class="text-muted mb-0">Update your personal details & set your goal.</p>
+  </div>
+
+  <a class="btn btn-outline-primary btn-sm" href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+</div>
+
+<div class="row g-3">
+
+  <!-- Summary -->
+  <div class="col-lg-5">
+    <div class="card glass border-0 shadow-sm h-100">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="fw-bold mb-1">Account Summary</h5>
+            <div class="text-muted small">Your basic info & academy mapping</div>
+          </div>
+          <span class="badge text-bg-light border">Profile</span>
+        </div>
+
+        <div class="mt-3">
+          <div class="profile-item">
+            <div class="text-muted small">Name</div>
+            <div class="fw-semibold">{{ user.name }}</div>
+          </div>
+
+          <div class="profile-item">
+            <div class="text-muted small">Email</div>
+            <div class="fw-semibold">{{ user.email }}</div>
+          </div>
+
+          <div class="profile-item">
+            <div class="text-muted small">Academy</div>
+            <div class="fw-semibold">{{ user.academy_name or "—" }}</div>
+          </div>
+
+          <div class="mt-3 p-3 rounded-3 border bg-light">
+            <div class="text-muted small mb-2">Status</div>
+
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge text-bg-light border">Role: <b class="ms-1">{{ user.role }}</b></span>
+
+              {% if user.level == "ADVANCED" %}
+                <span class="badge text-bg-success">ADVANCED</span>
+              {% else %}
+                <span class="badge text-bg-primary-subtle border">BEGINNER</span>
+              {% endif %}
+
+              <span class="badge text-bg-light border">{{ user.medals }} 🥇 medals</span>
+            </div>
+
+            <div class="text-muted small mt-2">
+              Level/Medals are set by Coach/Admin.
+            </div>
+          </div>
+
+          {% if user.goal_distance_m %}
+            <div class="mt-3">
+              <div class="d-flex justify-content-between small text-muted mb-1">
+                <span>🎯 Goal Distance</span>
+                <span>{{ "%.0f"|format(user.goal_distance_m) }} m</span>
+              </div>
+              <div class="progress" style="height: 10px;">
+                <div class="progress-bar" role="progressbar" style="width: 100%"></div>
+              </div>
+              <div class="text-muted small mt-2">Goal is set. Track progress in “View Progress”.</div>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Form -->
+  <div class="col-lg-7">
+    <div class="card glass border-0 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <h5 class="fw-bold mb-1">Edit Details</h5>
+            <div class="text-muted small">These details are used for your training profile.</div>
+          </div>
+          <span class="badge text-bg-light border">Editable</span>
+        </div>
+
+        <form method="post" class="row g-3 mt-2">
+
+          <div class="col-md-4">
+            <label class="form-label">Age</label>
+            <div class="input-group">
+              <span class="input-group-text">🎂</span>
+              <input class="form-control"
+                     type="number" min="1"
+                     name="age"
+                     value="{{ user.age or '' }}"
+                     placeholder="e.g. 18">
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Height (cm)</label>
+            <div class="input-group">
+              <span class="input-group-text">📏</span>
+              <input class="form-control"
+                     type="number" step="0.1" min="1"
+                     name="height_cm"
+                     value="{{ user.height_cm or '' }}"
+                     placeholder="e.g. 170">
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Goal Distance (m)</label>
+            <div class="input-group">
+              <span class="input-group-text">🎯</span>
+              <input class="form-control"
+                     type="number" step="1" min="1"
+                     name="goal_distance_m"
+                     value="{{ user.goal_distance_m or '' }}"
+                     placeholder="e.g. 1000">
+            </div>
+            <div class="form-text">Set your weekly or monthly goal.</div>
+          </div>
+
+          <div class="col-12 d-grid">
+            <button class="btn btn-success">Save Profile</button>
+          </div>
+        </form>
+
+        <div class="mt-3 p-3 rounded-3 border bg-light">
+          <div class="fw-semibold">Tip</div>
+          <div class="text-muted small">
+            Set a goal to unlock goal progress tracking inside “View Progress”.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Progress - Swim Tracker{% endblock %}
+
+{% block head_extra %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script defer src="{{ url_for('static', filename='js/progress_chart.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+  <div>
+    <h2 class="fw-bold mb-1">📈 Progress</h2>
+    <p class="text-muted mb-0">Your swims, totals, best time, and recent trend.</p>
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-primary" href="{{ url_for('swim') }}">⏱ Start Swim</a>
+    <a class="btn btn-primary" href="{{ url_for('swim') }}">+ New Record</a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mt-3">
+  <div class="col-md-6">
+    <div class="card glass border-0 shadow-sm stat-card h-100">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="text-muted small">Total Distance</div>
+            <div class="display-6 fw-bold mb-0">
+              {{ "%.0f"|format(total_distance) }} <span class="fs-6 text-muted">m</span>
+            </div>
+          </div>
+          <div class="stat-icon">📏</div>
+        </div>
+
+        {% if goal_distance_m %}
+          {% set pct = (total_distance / goal_distance_m * 100) if goal_distance_m > 0 else 0 %}
+          {% if pct > 100 %}{% set pct = 100 %}{% endif %}
+
+          <div class="mt-3">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+              <span>🎯 Goal: {{ "%.0f"|format(goal_distance_m) }} m</span>
+              <span>{{ "%.0f"|format(pct) }}%</span>
+            </div>
+
+            <div class="progress" style="height: 10px;">
+              <!-- ✅ Avoid inline Jinja inside style to stop CSS/JS lint errors -->
+              <div class="progress-bar goal-bar"
+                   role="progressbar"
+                   data-width="{{ pct|round(2) }}"
+                   aria-valuenow="{{ pct|round(0) }}"
+                   aria-valuemin="0"
+                   aria-valuemax="100"></div>
+            </div>
+
+            <div class="text-muted small mt-2">
+              Keep going! Every swim counts.
+            </div>
+          </div>
+        {% else %}
+          <div class="mt-3 p-3 rounded-3 border bg-light">
+            <div class="fw-semibold">🎯 Set your goal</div>
+            <div class="text-muted small">Add a goal distance in Profile to see progress %.</div>
+            <a class="btn btn-sm btn-outline-primary mt-2" href="{{ url_for('profile') }}">Set Goal</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card glass border-0 shadow-sm stat-card h-100">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="text-muted small">Best Timing</div>
+            <div class="display-6 fw-bold mb-0">{{ best_time or "—" }}</div>
+          </div>
+          <div class="stat-icon">⏱</div>
+        </div>
+        <div class="text-muted small mt-3">
+          Best time is the fastest recorded swim.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart -->
+<div class="card glass mt-3 border-0 shadow-sm">
+  <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <h5 class="fw-bold mb-0">📊 Progress Chart</h5>
+      <div class="text-muted small">Last 14 swims (distance + time trend)</div>
+    </div>
+    <span class="badge text-bg-light border">Last 14</span>
+  </div>
+  <div class="card-body pt-0">
+    <canvas id="progressChart" height="90"></canvas>
+  </div>
+</div>
+
+<!-- Records -->
+<div class="card glass mt-3 border-0 shadow-sm">
+  <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <h5 class="fw-bold mb-0">🗂 Swim History</h5>
+      <div class="text-muted small">Search, filter by stroke, edit or delete records.</div>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <div class="input-group input-group-sm" style="max-width: 260px;">
+        <span class="input-group-text">🔎</span>
+        <input id="recSearch" class="form-control" placeholder="Search date/stroke..." oninput="filterRecords()">
+      </div>
+
+      <!-- If you want dynamic strokes list, replace options with Jinja loop -->
+      <select id="strokeFilter" class="form-select form-select-sm" style="max-width: 190px;" onchange="filterRecords()">
+        <option value="">All Strokes</option>
+        <option value="Freestyle">Freestyle</option>
+        <option value="Breaststroke">Breaststroke</option>
+        <option value="Backstroke">Backstroke</option>
+        <option value="Butterfly">Butterfly</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card-body pt-0">
+    {% if records %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0" id="recTable">
+          <thead class="table-light">
+            <tr>
+              <th style="width:120px;">Date</th>
+              <th style="width:150px;">Stroke</th>
+              <th style="width:130px;">Time</th>
+              <th style="width:90px;">Laps</th>
+              <th style="width:100px;">Pool</th>
+              <th class="text-end" style="width:140px;">Distance</th>
+              <th class="text-end" style="width:160px;">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for r in records %}
+              <tr class="rec-row">
+                <td class="rec-date">{{ r.date }}</td>
+
+                <td class="rec-stroke">
+                  <span class="badge text-bg-secondary">{{ r.stroke_type }}</span>
+                </td>
+
+                <td class="fw-semibold">{{ r.time }}</td>
+                <td>{{ r.laps }}</td>
+                <td class="text-muted">{{ "%.0f"|format(r.pool_len) }} m</td>
+
+                <td class="text-end fw-semibold">{{ "%.0f"|format(r.distance) }} m</td>
+
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-primary"
+                     href="{{ url_for('record_edit', record_id=r.record_id) }}">Edit</a>
+
+                  <form method="post"
+                        action="{{ url_for('record_delete', record_id=r.record_id) }}"
+                        class="d-inline"
+                        onsubmit="return confirm('Delete this record?');">
+                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-5">
+        <div class="fs-3">🏊</div>
+        <div class="fw-semibold mt-2">No swims saved yet</div>
+        <div class="text-muted small">Click “Start Swim” to save your first record.</div>
+        <a class="btn btn-sm btn-primary mt-3" href="{{ url_for('swim') }}">Start Swim</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterRecords(){
+  const q = (document.getElementById("recSearch")?.value || "").toLowerCase().trim();
+  const stroke = (document.getElementById("strokeFilter")?.value || "").toLowerCase().trim();
+
+  document.querySelectorAll("#recTable tbody .rec-row").forEach(row => {
+    const date = (row.querySelector(".rec-date")?.textContent || "").toLowerCase();
+    const st = (row.querySelector(".rec-stroke")?.textContent || "").toLowerCase();
+
+    const okQ = !q || date.includes(q) || st.includes(q);
+    const okS = !stroke || st.includes(stroke);
+
+    row.style.display = (okQ && okS) ? "" : "none";
+  });
+}
+
+(function setGoalBar(){
+  document.querySelectorAll(".goal-bar").forEach(el => {
+    const w = parseFloat(el.dataset.width || "0");
+    el.style.width = Math.max(0, Math.min(100, w)) + "%";
+  });
+})();
+</script>
+{% endblock %}

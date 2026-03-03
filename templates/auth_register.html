@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Register - Swim Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 75vh;">
+  <div class="col-md-8 col-lg-5">
+
+    <div class="card glass border-0 shadow-sm auth-card">
+      <div class="card-body p-4 p-md-5">
+
+        <!-- Brand -->
+        <div class="text-center mb-4">
+          <div class="auth-logo mb-2">🏊</div>
+          <h2 class="fw-bold mb-1">Create Account</h2>
+          <p class="text-muted mb-0">Start tracking your swims and progress.</p>
+        </div>
+
+        <form method="post" class="mt-4" novalidate>
+
+          <div class="mb-3">
+            <label class="form-label small text-muted">Name</label>
+            <div class="input-group">
+              <span class="input-group-text">👤</span>
+              <input class="form-control" type="text" name="name" placeholder="Your full name" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small text-muted">Email</label>
+            <div class="input-group">
+              <span class="input-group-text">📧</span>
+              <input class="form-control" type="email" name="email" placeholder="you@example.com" required>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label small text-muted">Password</label>
+            <div class="input-group">
+              <span class="input-group-text">🔒</span>
+              <input id="pw" class="form-control"
+                     type="password"
+                     name="password"
+                     minlength="8"
+                     placeholder="Min 8 characters"
+                     required>
+              <button class="btn btn-outline-secondary" type="button" onclick="togglePw('pw')">👁</button>
+            </div>
+
+            <div class="small mt-2">
+              <div id="ruleLen" class="text-muted">• At least 8 characters</div>
+              <div id="ruleSpec" class="text-muted">• At least 1 special character (example: @, #, $, !)</div>
+            </div>
+          </div>
+
+          <div class="mb-3 mt-3">
+            <label class="form-label small text-muted">Confirm Password</label>
+            <div class="input-group">
+              <span class="input-group-text">✅</span>
+              <input id="cpw" class="form-control"
+                     type="password"
+                     name="confirm_password"
+                     minlength="8"
+                     placeholder="Re-enter password"
+                     required>
+              <button class="btn btn-outline-secondary" type="button" onclick="togglePw('cpw')">👁</button>
+            </div>
+            <div id="matchMsg" class="form-text">Make sure both passwords match.</div>
+          </div>
+
+          <button class="btn btn-success w-100 mt-2">Create Account</button>
+        </form>
+
+        <div class="mt-4 text-center">
+          <span class="text-muted">Already have an account?</span>
+          <a class="fw-semibold" href="{{ url_for('login') }}">Login</a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePw(id){
+  const el = document.getElementById(id);
+  el.type = (el.type === "password") ? "text" : "password";
+}
+
+function hasSpecialChar(s){
+  return /[^A-Za-z0-9]/.test(s);
+}
+
+function updateRules(){
+  const pw = document.getElementById("pw").value || "";
+  const cpw = document.getElementById("cpw").value || "";
+
+  const ruleLen = document.getElementById("ruleLen");
+  const ruleSpec = document.getElementById("ruleSpec");
+  const matchMsg = document.getElementById("matchMsg");
+
+  // length rule
+  if (pw.length >= 8){
+    ruleLen.className = "text-success";
+    ruleLen.textContent = "✓ At least 8 characters";
+  } else {
+    ruleLen.className = "text-muted";
+    ruleLen.textContent = "• At least 8 characters";
+  }
+
+  // special char rule
+  if (hasSpecialChar(pw)){
+    ruleSpec.className = "text-success";
+    ruleSpec.textContent = "✓ At least 1 special character";
+  } else {
+    ruleSpec.className = "text-muted";
+    ruleSpec.textContent = "• At least 1 special character (example: @, #, $, !)";
+  }
+
+  // match rule
+  if (!cpw){
+    matchMsg.className = "form-text";
+    matchMsg.textContent = "Make sure both passwords match.";
+  } else if (pw === cpw){
+    matchMsg.className = "text-success small";
+    matchMsg.textContent = "✓ Passwords match";
+  } else {
+    matchMsg.className = "text-danger small";
+    matchMsg.textContent = "✗ Passwords do not match";
+  }
+}
+
+document.addEventListener("input", (e) => {
+  if (e.target && (e.target.id === "pw" || e.target.id === "cpw")){
+    updateRules();
+  }
+});
+</script>
+{% endblock %}

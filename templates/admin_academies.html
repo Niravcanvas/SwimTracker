@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Admin - Academies{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h2 class="fw-bold mb-1">🏫 Academy Setup</h2>
+    <p class="text-muted mb-0">Create and manage academies (multi-academy model).</p>
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin_users') }}">User Control</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin_reports') }}">Reports</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin_monitoring') }}">Monitoring</a>
+  </div>
+</div>
+
+<!-- Add Academy -->
+<div class="card glass border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+      <div>
+        <h5 class="fw-bold mb-0">➕ Add Academy</h5>
+        <div class="text-muted small">Academies help coaches see swimmers by academy.</div>
+      </div>
+      <span class="badge text-bg-light border">Multi-Academy</span>
+    </div>
+
+    <form class="row g-2" method="post" action="{{ url_for('admin_academies_add') }}">
+      <div class="col-md-5">
+        <label class="form-label small text-muted mb-1">Academy Name</label>
+        <input class="form-control" name="name" placeholder="Example: Main Academy" required>
+      </div>
+
+      <div class="col-md-5">
+        <label class="form-label small text-muted mb-1">City (optional)</label>
+        <input class="form-control" name="city" placeholder="Example: Pune">
+      </div>
+
+      <div class="col-md-2 d-grid">
+        <label class="form-label small text-muted mb-1 d-none d-md-block">&nbsp;</label>
+        <button class="btn btn-success">Add Academy</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Academy List -->
+<div class="card glass border-0 shadow-sm">
+  <div class="card-body pb-0 d-flex justify-content-between align-items-center">
+    <h5 class="fw-bold mb-0">📋 Academies</h5>
+    <span class="text-muted small">Total: {{ academies|length }}</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th style="width:80px;">ID</th>
+          <th>Name</th>
+          <th style="width:220px;">City</th>
+          <th class="text-end" style="width:140px;">Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+      {% if academies|length == 0 %}
+        <tr>
+          <td colspan="4" class="text-center text-muted py-5">
+            No academies found. Create your first academy above.
+          </td>
+        </tr>
+      {% else %}
+        {% for a in academies %}
+          <tr>
+            <td class="text-muted">#{{ a.academy_id }}</td>
+
+            <td>
+              <div class="fw-semibold">{{ a.name }}</div>
+              <div class="text-muted small">Academy ID: {{ a.academy_id }}</div>
+            </td>
+
+            <td>
+              {% if a.city %}
+                <span class="badge text-bg-primary-subtle border">{{ a.city }}</span>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+            <td class="text-end">
+              <form method="post"
+                    action="{{ url_for('admin_academies_delete', academy_id=a.academy_id) }}"
+                    onsubmit="return confirm('Delete this academy? Users will be detached from it.');">
+                <button class="btn btn-sm btn-outline-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

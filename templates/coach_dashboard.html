@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Coach Panel{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h2 class="fw-bold mb-1">🏅 Coach Panel</h2>
+    <p class="text-muted mb-0">View swimmers, check ranking, export PDF reports, and compare performance.</p>
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('coach_ranking') }}">📈 Ranking List</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('compare') }}">🆚 Compare Swimmers</a>
+  </div>
+</div>
+
+<div class="row g-3">
+
+  <!-- Tips -->
+  <div class="col-lg-4">
+    <div class="card glass border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="fw-bold mb-2">Quick Tips</h5>
+        <ul class="mb-0 text-muted small">
+          <li>Use <b>Ranking</b> to see top swimmers by total distance.</li>
+          <li>Use <b>Compare</b> to compare two swimmers.</li>
+          <li>Export <b>PDF</b> for an official performance report.</li>
+        </ul>
+
+        <hr>
+
+        <div class="d-flex gap-2 flex-wrap">
+          <span class="badge text-bg-light border">Coach Tools</span>
+          <span class="badge text-bg-light border">PDF Reports</span>
+          <span class="badge text-bg-light border">Compare</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Table -->
+  <div class="col-lg-8">
+    <div class="card glass border-0 shadow-sm">
+      <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <h5 class="fw-bold mb-0">👥 People List</h5>
+          <div class="text-muted small">Total: {{ swimmers|length }}</div>
+        </div>
+
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+
+          <!-- ✅ Role filter buttons -->
+          <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-outline-dark active" id="btnAll" onclick="filterRole('ALL')">
+              All
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="btnUser" onclick="filterRole('USER')">
+              Swimmers
+            </button>
+            <button type="button" class="btn btn-outline-info" id="btnCoach" onclick="filterRole('COACH')">
+              Coaches
+            </button>
+          </div>
+
+          <!-- Search -->
+          <div class="input-group input-group-sm" style="max-width: 280px;">
+            <span class="input-group-text">🔎</span>
+            <input id="swimSearch" class="form-control" placeholder="Search name..." oninput="filterRole(currentRole)">
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle mb-0" id="swimTable">
+          <thead class="table-light">
+            <tr>
+              <th style="width:80px;">ID</th>
+              <th>Name</th>
+              <th style="width:150px;">Role</th>
+              <th style="width:150px;">Level</th>
+              <th style="width:130px;">Medals</th>
+              <th class="text-end" style="width:170px;">Report</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% if swimmers|length == 0 %}
+              <tr>
+                <td colspan="6" class="text-center text-muted py-5">
+                  No swimmers found.
+                </td>
+              </tr>
+            {% else %}
+              {% for s in swimmers %}
+                <tr class="sw-row"
+                    data-role="{{ s.role if s.role is defined else 'USER' }}"
+                    data-name="{{ s.name|lower }}">
+
+                  <td class="text-muted">#{{ s.user_id }}</td>
+
+                  <td>
+                    <div class="fw-semibold sw-name">{{ s.name }}</div>
+                    <div class="text-muted small">ID: {{ s.user_id }}</div>
+                  </td>
+
+                  <!-- ✅ Role -->
+                  <td>
+                    {% set rr = s.role if s.role is defined else "USER" %}
+                    {% if rr == "COACH" %}
+                      <span class="badge text-bg-info">COACH</span>
+                    {% elif rr == "ADMIN" %}
+                      <span class="badge text-bg-warning">ADMIN</span>
+                    {% else %}
+                      <span class="badge text-bg-secondary">USER</span>
+                    {% endif %}
+                  </td>
+
+                  <!-- Level -->
+                  <td>
+                    {% if s.level == "ADVANCED" %}
+                      <span class="badge text-bg-success">ADVANCED</span>
+                    {% else %}
+                      <span class="badge text-bg-primary-subtle border">BEGINNER</span>
+                    {% endif %}
+                  </td>
+
+                  <!-- Medals -->
+                  <td>
+                    <span class="badge text-bg-light border">{{ s.medals }} 🥇</span>
+                  </td>
+
+                  <td class="text-end">
+                    <a class="btn btn-sm btn-outline-success"
+                       href="{{ url_for('coach_export_pdf', user_id=s.user_id) }}">
+                      Export PDF
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-body pt-3">
+        <div class="text-muted small">
+          Note: Coaches can export reports only for swimmers in their academy. Admin can export for all swimmers.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentRole = "ALL";
+
+function setActive(btnId){
+  ["btnAll","btnUser","btnCoach"].forEach(id=>{
+    document.getElementById(id)?.classList.remove("active");
+  });
+  document.getElementById(btnId)?.classList.add("active");
+}
+
+function filterRole(role){
+  currentRole = role;
+
+  if(role === "ALL") setActive("btnAll");
+  if(role === "USER") setActive("btnUser");
+  if(role === "COACH") setActive("btnCoach");
+
+  const q = (document.getElementById("swimSearch")?.value || "").toLowerCase().trim();
+
+  document.querySelectorAll("#swimTable tbody .sw-row").forEach(row=>{
+    const r = (row.dataset.role || "USER").toUpperCase();
+    const name = (row.dataset.name || "");
+
+    const okRole = (role === "ALL") || (r === role);
+    const okSearch = !q || name.includes(q);
+
+    row.style.display = (okRole && okSearch) ? "" : "none";
+  });
+}
+</script>
+{% endblock %}
