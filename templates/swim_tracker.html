@@ -1,422 +1,258 @@
 {% extends "base.html" %}
-{% block title %}Log Swim{% endblock %}
+{% block title %}Swim Tracker{% endblock %}
 
 {% block head_extra %}
 <script defer src="{{ url_for('static', filename='js/stopwatch.js') }}"></script>
 <style>
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
 
-  /* ── Page header ── */
-  .st-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 12px;
+  .page-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif; font-size: 1.5rem;
+    font-weight: 800; color: var(--text-1); margin: 0 0 5px;
+  }
+  .page-sub { font-size: 13.5px; color: var(--text-3); margin: 0; }
+
+  .btn-action {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 9px; font-size: 13px; font-weight: 500;
+    text-decoration: none; border: 1px solid var(--border);
+    background: var(--navy-2); color: var(--text-2); transition: all 0.18s;
+  }
+  .btn-action:hover { color: var(--text-1); background: var(--navy-3); }
+  .btn-action svg { width: 14px; height: 14px; }
+
+  /* ── Layout ── */
+  .tracker-layout {
+    display: grid; grid-template-columns: 1fr 300px; gap: 20px;
+    animation: fadeUp 0.35s 0.06s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  .panel {
+    background: var(--navy-2); border: 1px solid var(--border); border-radius: 16px;
+  }
+  .panel-body { padding: 28px; }
+
+  /* ── Stopwatch ── */
+  .sw-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
     margin-bottom: 24px;
   }
-
-  .st-title {
-    font-family: var(--font-display);
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
-    margin-bottom: 4px;
+  .sw-title {
+    font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+    color: var(--text-1); margin: 0 0 4px;
   }
-
-  .st-sub { font-size: 0.85rem; color: var(--text-muted); }
-
-  .btn-progress-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: var(--radius-sm);
-    font-size: 0.84rem;
-    font-weight: 500;
-    text-decoration: none;
-    background: var(--glass-bg-strong);
-    border: 1px solid var(--border-strong);
-    color: var(--text-secondary);
-    transition: all 0.18s;
-    backdrop-filter: blur(8px);
-    white-space: nowrap;
-  }
-  .btn-progress-link svg { width: 14px; height: 14px; }
-  .btn-progress-link:hover { background: white; color: var(--accent); border-color: var(--accent-mid); }
-
-  /* ── Main layout ── */
-  .tracker-layout {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 16px;
-    align-items: start;
-  }
-
-  /* ── Glass panel ── */
-  .st-panel {
-    background: var(--glass-bg-strong);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius);
-    box-shadow: var(--glass-shadow);
-    overflow: hidden;
-  }
-
-  .st-panel-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .st-panel-title {
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
+  .sw-sub { font-size: 12px; color: var(--text-3); }
 
   .sw-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 50px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    background: #f1f5f9;
-    color: var(--text-muted);
-    border: 1px solid var(--border);
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 7px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    background: var(--navy-3); color: var(--text-3); border: 1px solid var(--border);
     transition: all 0.2s;
   }
-  .sw-status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-  .sw-status.running { background: #ecfdf5; color: #059669; border-color: rgba(16,185,129,0.3); }
-  .sw-status.stopped { background: #fffbeb; color: #d97706; border-color: rgba(245,158,11,0.3); }
+  .sw-status.running { background: rgba(0,194,168,0.12); color: var(--teal); border-color: rgba(0,194,168,0.25); }
+  .sw-status.stopped { background: rgba(245,197,66,0.1); color: var(--gold); border-color: rgba(245,197,66,0.25); }
+  .sw-status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-  .st-panel-body { padding: 20px; }
-
-  /* ── Clock ── */
   .sw-clock {
-    text-align: center;
-    padding: 28px 20px;
-    background: linear-gradient(135deg, #eff6ff, #ecfeff);
-    border: 1px solid rgba(59,130,246,0.15);
-    border-radius: var(--radius-sm);
-    margin-bottom: 16px;
+    text-align: center; padding: 32px 24px;
+    background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 14px; margin-bottom: 20px;
   }
-
   .sw-time {
-    font-family: var(--font-display);
-    font-size: 3.2rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: 0.02em;
-    line-height: 1;
+    font-family: 'Syne', sans-serif; font-size: 3.5rem; font-weight: 800;
+    color: var(--text-1); letter-spacing: 0.04em; line-height: 1;
     font-variant-numeric: tabular-nums;
-    transition: color 0.2s;
   }
+  .sw-time.running { color: var(--teal); text-shadow: 0 0 30px rgba(0,194,168,0.3); }
+  .sw-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 8px; }
 
-  .sw-time.running { color: var(--accent); }
-  .sw-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 8px; }
-
-  /* ── Stopwatch buttons ── */
-  .sw-btns {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
+  .sw-btns { display: flex; gap: 10px; margin-bottom: 28px; }
 
   .btn-sw {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 11px 14px;
-    border-radius: var(--radius-sm);
-    border: none;
-    font-family: var(--font-display);
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.18s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    flex: 1; padding: 11px 14px; border-radius: 10px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; transition: all 0.18s;
   }
-  .btn-sw svg { width: 15px; height: 15px; flex-shrink: 0; }
-
+  .btn-sw svg { width: 15px; height: 15px; }
   .btn-sw-start {
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
-    color: white;
-    box-shadow: 0 4px 14px rgba(59,130,246,0.3);
+    background: linear-gradient(135deg, var(--teal), #0099dd); color: #fff;
+    box-shadow: 0 4px 14px rgba(0,194,168,0.25);
   }
-  .btn-sw-start:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(59,130,246,0.4); }
-
+  .btn-sw-start:hover { opacity: 0.9; transform: translateY(-1px); }
   .btn-sw-stop {
-    background: #fffbeb;
-    color: #d97706;
-    border: 1px solid rgba(245,158,11,0.3);
+    background: rgba(245,197,66,0.12); color: var(--gold);
+    border: 1px solid rgba(245,197,66,0.25);
   }
-  .btn-sw-stop:hover { background: #fef3c7; }
-
+  .btn-sw-stop:hover { background: rgba(245,197,66,0.2); }
   .btn-sw-reset {
-    background: var(--glass-bg);
-    color: var(--text-muted);
-    border: 1px solid var(--border-strong);
-    padding: 11px 14px;
+    background: var(--navy-3); color: var(--text-2); border: 1px solid var(--border);
+    flex: 0 0 auto; padding: 11px 16px;
   }
-  .btn-sw-reset:hover { color: var(--text-primary); background: white; }
+  .btn-sw-reset:hover { color: var(--text-1); border-color: rgba(255,255,255,0.14); }
 
-  /* ── Divider ── */
-  .st-divider { height: 1px; background: var(--border); margin-bottom: 20px; }
+  .sw-divider { height: 1px; background: var(--border); margin-bottom: 24px; }
 
-  /* ── Form fields ── */
-  .form-row-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 14px;
-  }
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
 
-  .field-group { display: flex; flex-direction: column; gap: 5px; }
-
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
   .field-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text-3);
   }
-
-  .field-hint { font-size: 0.75rem; color: var(--text-muted); }
-
-  .field-select, .field-input {
-    width: 100%;
-    background: rgba(255,255,255,0.75);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-family: var(--font-body);
-    font-size: 0.9rem;
-    padding: 10px 14px;
-    outline: none;
-    transition: all 0.18s;
-    -webkit-appearance: none;
-    appearance: none;
-  }
+  .field-hint { font-size: 11.5px; color: var(--text-3); }
 
   .field-select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    padding-right: 36px;
+    width: 100%; background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-1);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    padding: 11px 36px 11px 14px; outline: none;
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234e5878' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; background-size: 14px;
+    transition: border-color 0.18s;
   }
+  .field-select option { background: #0d1530; }
+  .field-select:focus { border-color: rgba(0,194,168,0.45); box-shadow: 0 0 0 3px rgba(0,194,168,0.1); }
 
-  .field-select:focus, .field-input:focus {
-    border-color: var(--accent-mid);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+  .field-input {
+    width: 100%; background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-1);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    padding: 11px 14px; outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s; -webkit-appearance: none;
   }
+  .field-input::placeholder { color: var(--text-3); }
+  .field-input:focus { border-color: rgba(0,194,168,0.45); box-shadow: 0 0 0 3px rgba(0,194,168,0.1); }
 
-  .field-input::placeholder { color: var(--text-muted); }
-
-  /* ── Summary mini card ── */
   .summary-card {
-    background: linear-gradient(135deg, #eff6ff, #ecfeff);
-    border: 1px solid rgba(59,130,246,0.15);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
+    background: var(--navy-3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px;
   }
-
   .summary-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-    border-bottom: 1px solid rgba(59,130,246,0.1);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
   }
   .summary-row:last-of-type { border-bottom: none; }
-  .summary-row-label { font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+  .summary-row-label { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
   .summary-row-label svg { width: 12px; height: 12px; }
-  .summary-row-value { font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
-  .summary-row-value.accent { color: var(--accent); }
+  .summary-row-value { font-family: 'Syne', sans-serif; font-size: 13.5px; font-weight: 700; color: var(--text-1); }
+  .summary-row-value.teal { color: var(--teal); }
+  .summary-tip { font-size: 11.5px; color: var(--text-3); margin-top: 10px; display: flex; align-items: center; gap: 5px; }
+  .summary-tip svg { width: 12px; height: 12px; color: var(--teal); flex-shrink: 0; }
 
-  /* ── Save button ── */
-  .btn-save {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 13px;
-    border-radius: var(--radius-sm);
-    border: none;
-    margin-top: 16px;
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
-    color: white;
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(59,130,246,0.35);
+  .btn-save-record {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 13px; border-radius: 10px; border: none; margin-top: 18px;
+    background: linear-gradient(135deg, var(--teal), #0099dd);
+    color: #fff; font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700; letter-spacing: 0.04em;
+    cursor: pointer; transition: opacity 0.18s, transform 0.18s, box-shadow 0.18s;
+    box-shadow: 0 4px 18px rgba(0,194,168,0.25);
   }
-  .btn-save svg { width: 16px; height: 16px; }
-  .btn-save:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(59,130,246,0.45); }
+  .btn-save-record svg { width: 15px; height: 15px; }
+  .btn-save-record:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,194,168,0.35); }
 
   .save-warn {
-    display: none;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
-    color: var(--danger);
-    margin-top: 8px;
+    display: none; align-items: center; gap: 6px;
+    font-size: 12px; color: #ff6b6b; margin-top: 8px;
   }
   .save-warn.visible { display: flex; }
-  .save-warn svg { width: 13px; height: 13px; flex-shrink: 0; }
+  .save-warn svg { width: 13px; height: 13px; }
 
-  /* ── Tips panel ── */
-  .tips-panel { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-
+  /* ── Tips Panel ── */
+  .tips-panel { padding: 24px; height: 100%; display: flex; flex-direction: column; gap: 16px; }
   .tips-title {
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 2px;
+    font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+    color: var(--text-1); margin: 0 0 4px;
   }
-
   .tip-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 9px;
-    font-size: 0.84rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13px; color: var(--text-2); line-height: 1.5;
   }
-
-  .tip-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+  .tip-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--teal);
+    flex-shrink: 0; margin-top: 6px;
   }
-  .tip-icon svg { width: 14px; height: 14px; }
-  .tip-icon.blue  { background: #eff6ff; color: var(--accent); }
-  .tip-icon.teal  { background: #ecfeff; color: var(--teal); }
-  .tip-icon.green { background: #ecfdf5; color: var(--success); }
-  .tip-icon.amber { background: #fffbeb; color: var(--warning); }
-
-  .edit-hint-box {
-    padding: 14px 16px;
-    background: rgba(59,130,246,0.06);
-    border: 1px solid rgba(59,130,246,0.15);
-    border-radius: var(--radius-sm);
-    margin-top: auto;
+  .edit-hint {
+    margin-top: auto; padding: 16px; border-radius: 12px;
+    background: var(--navy-3); border: 1px solid var(--border);
   }
-  .edit-hint-title { font-size: 0.84rem; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
-  .edit-hint-sub   { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px; }
+  .edit-hint-title { font-size: 13px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; }
+  .edit-hint-sub   { font-size: 12px; color: var(--text-3); margin-bottom: 12px; }
   .btn-open-progress {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 7px 13px;
-    border-radius: var(--radius-sm);
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--accent);
-    background: var(--accent-light);
-    border: 1px solid rgba(59,130,246,0.2);
-    text-decoration: none;
-    transition: all 0.18s;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 13px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    color: var(--teal); background: var(--teal-glow);
+    border: 1px solid rgba(0,194,168,0.3); text-decoration: none; transition: all 0.18s;
   }
+  .btn-open-progress:hover { background: rgba(0,194,168,0.22); color: var(--teal); }
   .btn-open-progress svg { width: 12px; height: 12px; }
-  .btn-open-progress:hover { background: #dbeafe; color: var(--accent-dark); }
 
-  /* ── MOBILE RESPONSIVE ── */
-  @media (max-width: 768px) {
-
-    .tracker-layout {
-      grid-template-columns: 1fr;
-    }
-
-    /* Tips panel goes below on mobile, horizontal scroll tips */
-    .tips-col { order: 2; }
-    .main-col { order: 1; }
-
-    .sw-time { font-size: 2.6rem; }
-
-    .sw-btns {
-      grid-template-columns: 1fr 1fr auto;
-    }
-
-    .form-row-2 {
-      grid-template-columns: 1fr;
-    }
-
-    /* On phone, show tips as horizontal scrollable chips instead of full panel */
-    .tips-panel {
-      padding: 16px;
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .tips-title { width: 100%; margin-bottom: 0; }
-
-    .tip-item {
-      background: var(--glass-bg-strong);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-sm);
-      padding: 10px 12px;
-      flex: 1 1 calc(50% - 5px);
-      min-width: 140px;
-      font-size: 0.8rem;
-    }
-
-    .edit-hint-box { width: 100%; margin-top: 0; }
-
-    .st-header { flex-direction: column; gap: 10px; }
-    .btn-progress-link { width: 100%; justify-content: center; }
+  /* ── MOBILE ── */
+  @media (max-width: 900px) {
+    .tracker-layout { grid-template-columns: 1fr; }
+    /* tips panel goes below main on mobile */
+    .tips-panel { flex-direction: row; flex-wrap: wrap; gap: 12px; padding: 20px; }
+    .tips-title  { width: 100%; margin-bottom: 0; }
+    .tip-item    { flex: 1 1 calc(50% - 6px); min-width: 140px; }
+    .edit-hint   { width: 100%; margin-top: 0; }
   }
 
-  @media (max-width: 420px) {
-    .sw-time { font-size: 2.2rem; }
-    .sw-btns { grid-template-columns: 1fr 1fr; }
-    .btn-sw-reset { grid-column: 1 / -1; }
-    .tip-item { flex: 1 1 100%; }
+  @media (max-width: 600px) {
+    .panel-body  { padding: 18px; }
+    .sw-clock    { padding: 24px 16px; }
+    .sw-time     { font-size: 2.6rem; }
+    .form-grid-2 { grid-template-columns: 1fr; }
+    .tips-panel  { padding: 16px; }
+    .tip-item    { flex: 1 1 100%; }
+  }
+
+  @media (max-width: 400px) {
+    .sw-time  { font-size: 2.1rem; }
+    .sw-btns  { flex-wrap: wrap; }
+    .btn-sw-reset { flex: 1 1 100%; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="st-header">
+<div class="page-header">
   <div>
-    <h1 class="st-title">Log Swim</h1>
-    <p class="st-sub">Start the stopwatch, set your stroke and laps, then save.</p>
+    <h1 class="page-title">Swim Tracker</h1>
+    <p class="page-sub">Start the stopwatch, select stroke, enter laps, and save.</p>
   </div>
-  <a class="btn-progress-link" href="{{ url_for('progress') }}">
+  <a class="btn-action" href="{{ url_for('progress') }}">
     <i data-lucide="trending-up"></i> View Progress
   </a>
 </div>
 
 <div class="tracker-layout">
 
-  <!-- Main panel -->
-  <div class="st-panel main-col">
-    <div class="st-panel-header">
-      <span class="st-panel-title">Stopwatch</span>
-      <div class="sw-status" id="swStatus">
-        <span class="sw-status-dot"></span> Ready
-      </div>
-    </div>
+  <!-- Stopwatch + Form -->
+  <div class="panel">
+    <div class="panel-body">
 
-    <div class="st-panel-body">
+      <div class="sw-header">
+        <div>
+          <div class="sw-title">Stopwatch</div>
+          <div class="sw-sub">Tap Start, swim, Stop, then Save.</div>
+        </div>
+        <div class="sw-status" id="swStatus">
+          <span class="sw-status-dot"></span> Ready
+        </div>
+      </div>
 
       <div class="sw-clock">
         <div class="sw-time" id="displayTime">00:00.00</div>
@@ -435,12 +271,12 @@
         </button>
       </div>
 
-      <div class="st-divider"></div>
+      <div class="sw-divider"></div>
 
       <form method="post" onsubmit="return validateSave()">
         <input type="hidden" name="time_ms" id="timeMs" value="0">
 
-        <div class="form-row-2">
+        <div class="form-grid-2">
           <div class="field-group">
             <label class="field-label">Stroke Type</label>
             <select class="field-select" name="stroke_type" required>
@@ -448,6 +284,7 @@
                 <option value="{{ s }}">{{ s }}</option>
               {% endfor %}
             </select>
+            <div class="field-hint">Select the stroke used.</div>
           </div>
 
           <div class="field-group">
@@ -456,37 +293,35 @@
               <option value="25" selected>25 m</option>
               <option value="50">50 m</option>
             </select>
+            <div class="field-hint">Standard pools: 25m or 50m.</div>
           </div>
-        </div>
 
-        <div class="form-row-2">
           <div class="field-group">
             <label class="field-label">Laps</label>
             <input class="field-input" type="number" name="laps"
                    id="laps" min="1" value="10" required>
-            <span class="field-hint">Distance = laps x pool length</span>
+            <div class="field-hint">Distance = laps x pool length.</div>
           </div>
 
           <div class="field-group">
             <label class="field-label">Summary</label>
             <div class="summary-card">
               <div class="summary-row">
-                <span class="summary-row-label">
-                  <i data-lucide="ruler"></i> Distance
-                </span>
-                <span class="summary-row-value" id="distancePreview">250 m</span>
+                <div class="summary-row-label"><i data-lucide="ruler"></i> Distance</div>
+                <div class="summary-row-value" id="distancePreview">250 m</div>
               </div>
               <div class="summary-row">
-                <span class="summary-row-label">
-                  <i data-lucide="timer"></i> Time
-                </span>
-                <span class="summary-row-value accent" id="timePreview">00:00.00</span>
+                <div class="summary-row-label"><i data-lucide="timer"></i> Time</div>
+                <div class="summary-row-value teal" id="timePreview">00:00.00</div>
+              </div>
+              <div class="summary-tip">
+                <i data-lucide="info"></i> Stop the timer before saving.
               </div>
             </div>
           </div>
         </div>
 
-        <button class="btn-save" id="btnSave" type="submit">
+        <button class="btn-save-record" id="btnSave" type="submit">
           <i data-lucide="save"></i> Save Record
         </button>
 
@@ -495,38 +330,20 @@
           Please start and stop the stopwatch before saving.
         </div>
       </form>
-
     </div>
   </div>
 
-  <!-- Tips panel -->
-  <div class="st-panel tips-col">
+  <!-- Tips Panel -->
+  <div class="panel">
     <div class="tips-panel">
       <div class="tips-title">Tips</div>
-
-      <div class="tip-item">
-        <div class="tip-icon blue"><i data-lucide="play"></i></div>
-        <span>Hit <b>Start</b> the moment you push off the wall.</span>
-      </div>
-
-      <div class="tip-item">
-        <div class="tip-icon amber"><i data-lucide="pause"></i></div>
-        <span>Hit <b>Stop</b> when you touch the finish wall.</span>
-      </div>
-
-      <div class="tip-item">
-        <div class="tip-icon teal"><i data-lucide="waves"></i></div>
-        <span>Select the correct <b>stroke</b> before saving.</span>
-      </div>
-
-      <div class="tip-item">
-        <div class="tip-icon green"><i data-lucide="check-circle"></i></div>
-        <span>Confirm <b>laps</b> and <b>pool size</b> for accurate distance.</span>
-      </div>
-
-      <div class="edit-hint-box">
-        <div class="edit-hint-title">Need to edit a record?</div>
-        <div class="edit-hint-sub">Any saved record can be updated from Progress.</div>
+      <div class="tip-item"><span class="tip-dot"></span> Use <b>Start</b> when you push off the wall.</div>
+      <div class="tip-item"><span class="tip-dot"></span> Use <b>Stop</b> when you touch the finish.</div>
+      <div class="tip-item"><span class="tip-dot"></span> Choose the correct <b>Stroke</b> before saving.</div>
+      <div class="tip-item"><span class="tip-dot"></span> Double-check <b>laps</b> and <b>pool length</b> for accurate distance.</div>
+      <div class="edit-hint">
+        <div class="edit-hint-title">Need to edit later?</div>
+        <div class="edit-hint-sub">Any saved record can be updated in Progress.</div>
         <a class="btn-open-progress" href="{{ url_for('progress') }}">
           <i data-lucide="trending-up"></i> Open Progress
         </a>
@@ -546,8 +363,8 @@
     function calcDistance() {
       const laps = parseFloat(document.getElementById('laps')?.value || '0');
       const pool = parseFloat(document.getElementById('poolLen')?.value || '0');
-      const d = Math.max(0, laps) * Math.max(0, pool);
-      const el = document.getElementById('distancePreview');
+      const d    = Math.max(0, laps) * Math.max(0, pool);
+      const el   = document.getElementById('distancePreview');
       if (el) el.textContent = (d ? Math.round(d) : 0) + ' m';
     }
 
@@ -555,18 +372,15 @@
     document.getElementById('poolLen')?.addEventListener('change', calcDistance);
     calcDistance();
 
-    // Sync time display to summary preview
     const tOut = document.getElementById('timePreview');
     const tSrc = document.getElementById('displayTime');
     const timer = setInterval(() => {
-      if (!document.body.contains(tOut) || !document.body.contains(tSrc)) {
-        clearInterval(timer); return;
-      }
+      if (!document.body.contains(tOut) || !document.body.contains(tSrc)) { clearInterval(timer); return; }
       if (tOut && tSrc) tOut.textContent = tSrc.textContent || '00:00.00';
     }, 200);
 
     window.validateSave = function () {
-      const ms = parseInt(document.getElementById('timeMs')?.value || '0', 10);
+      const ms   = parseInt(document.getElementById('timeMs')?.value || '0', 10);
       const warn = document.getElementById('saveWarn');
       if (!ms || ms <= 0) { warn?.classList.add('visible'); return false; }
       warn?.classList.remove('visible');
