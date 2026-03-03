@@ -1,105 +1,114 @@
 {% extends "base.html" %}
-{% block title %}Admin - Academies{% endblock %}
-
+{% block title %}Admin - Academy Setup{% endblock %}
+{% block head_extra %}
+<style>
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .page-header,.section-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;}
+  .page-header{margin-bottom:24px;animation:fadeUp .3s cubic-bezier(.22,1,.36,1) both;}
+  .section-header{padding:24px 28px 0;gap:12px;}
+  .page-title{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:var(--text-1);margin:0 0 5px;}
+  .page-sub{font-size:13.5px;color:var(--text-3);margin:0;}
+  .nav-btns{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn-nav{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:500;text-decoration:none;border:1px solid var(--border);background:var(--navy-2);color:var(--text-2);transition:all .18s;}
+  .btn-nav:hover{color:var(--text-1);background:var(--navy-3);}
+  .btn-nav svg{width:13px;height:13px;}
+  .section{background:var(--navy-2);border:1px solid var(--border);border-radius:16px;margin-bottom:20px;}
+  .section-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--text-1);margin:0 0 3px;}
+  .section-sub{font-size:12px;color:var(--text-3);}
+  .section-body{padding:20px 28px 24px;}
+  .section-footer{padding:14px 28px;border-top:1px solid var(--border);}
+  .badge-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--navy-3);color:var(--text-3);border:1px solid var(--border);white-space:nowrap;}
+  .add-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:end;}
+  @media(max-width:700px){.add-grid{grid-template-columns:1fr;}}
+  .field-group{display:flex;flex-direction:column;gap:6px;}
+  .field-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3);}
+  .fi{width:100%;background:var(--navy-3);border:1px solid var(--border);border-radius:10px;color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13.5px;padding:10px 13px;outline:none;-webkit-appearance:none;box-sizing:border-box;}
+  .fi::placeholder{color:var(--text-3);}
+  .fi:focus{border-color:rgba(0,194,168,.45);box-shadow:0 0 0 3px rgba(0,194,168,.1);}
+  .btn-add{display:inline-flex;align-items:center;gap:7px;padding:11px 20px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--teal),#09d);color:#fff;font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,194,168,.22);transition:opacity .18s;}
+  .btn-add:hover{opacity:.9;}
+  .btn-add svg{width:14px;height:14px;}
+  .dt{width:100%;border-collapse:collapse;}
+  .dt thead tr{border-bottom:1px solid var(--border);}
+  .dt th{padding:10px 16px;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);background:var(--navy-3);}
+  .dt th:first-child{padding-left:28px;border-radius:10px 0 0 0;}
+  .dt th:last-child{padding-right:28px;border-radius:0 10px 0 0;text-align:right;}
+  .dt td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13.5px;color:var(--text-2);vertical-align:middle;}
+  .dt td:first-child{padding-left:28px;}
+  .dt td:last-child{padding-right:28px;text-align:right;}
+  .dt tr:last-child td{border-bottom:none;}
+  .dt tbody tr:hover td{background:rgba(255,255,255,.02);}
+  .an{font-weight:600;color:var(--text-1);}
+  .am{font-size:11px;color:var(--text-3);margin-top:2px;}
+  .ctag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:50px;font-size:12px;font-weight:600;background:rgba(100,150,255,.1);color:#7aabff;border:1px solid rgba(100,150,255,.2);}
+  .ctag svg{width:11px;height:11px;}
+  .bdel{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:600;color:#ff6b6b;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);cursor:pointer;transition:all .18s;}
+  .bdel:hover{background:rgba(255,107,107,.15);}
+  .bdel svg{width:13px;height:13px;}
+  .es{padding:48px;text-align:center;color:var(--text-3);}
+  .ei{width:48px;height:48px;border-radius:14px;background:var(--navy-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+  .ei svg{width:22px;height:22px;}
+  .et{font-size:14px;font-weight:600;color:var(--text-2);margin-bottom:4px;}
+  .fn{font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:6px;}
+  .fn svg{width:12px;height:12px;color:var(--teal);}
+</style>
+{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+<div class="page-header">
   <div>
-    <h2 class="fw-bold mb-1">🏫 Academy Setup</h2>
-    <p class="text-muted mb-0">Create and manage academies (multi-academy model).</p>
+    <h1 class="page-title">Academy Setup</h1>
+    <p class="page-sub">Create and manage academies for the multi-academy model.</p>
   </div>
-
-  <div class="d-flex gap-2 flex-wrap">
-    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin_users') }}">User Control</a>
-    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin_reports') }}">Reports</a>
-    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin_monitoring') }}">Monitoring</a>
+  <div class="nav-btns">
+    <a class="btn-nav" href="{{ url_for('admin_users') }}"><i data-lucide="users"></i> User Control</a>
+    <a class="btn-nav" href="{{ url_for('admin_reports') }}"><i data-lucide="file-bar-chart"></i> Reports</a>
+    <a class="btn-nav" href="{{ url_for('admin_monitoring') }}"><i data-lucide="activity"></i> Monitoring</a>
   </div>
 </div>
-
-<!-- Add Academy -->
-<div class="card glass border-0 shadow-sm mb-3">
-  <div class="card-body">
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-      <div>
-        <h5 class="fw-bold mb-0">➕ Add Academy</h5>
-        <div class="text-muted small">Academies help coaches see swimmers by academy.</div>
-      </div>
-      <span class="badge text-bg-light border">Multi-Academy</span>
-    </div>
-
-    <form class="row g-2" method="post" action="{{ url_for('admin_academies_add') }}">
-      <div class="col-md-5">
-        <label class="form-label small text-muted mb-1">Academy Name</label>
-        <input class="form-control" name="name" placeholder="Example: Main Academy" required>
-      </div>
-
-      <div class="col-md-5">
-        <label class="form-label small text-muted mb-1">City (optional)</label>
-        <input class="form-control" name="city" placeholder="Example: Pune">
-      </div>
-
-      <div class="col-md-2 d-grid">
-        <label class="form-label small text-muted mb-1 d-none d-md-block">&nbsp;</label>
-        <button class="btn btn-success">Add Academy</button>
+<div class="section" style="animation:fadeUp .35s .06s cubic-bezier(.22,1,.36,1) both;">
+  <div class="section-header">
+    <div><div class="section-title">Add Academy</div><div class="section-sub">Academies let coaches see and manage their assigned swimmers.</div></div>
+    <span class="badge-pill"><i data-lucide="building-2"></i> Multi-Academy</span>
+  </div>
+  <div class="section-body">
+    <form method="post" action="{{ url_for('admin_academies_add') }}">
+      <div class="add-grid">
+        <div class="field-group"><label class="field-label">Academy Name</label><input class="fi" name="name" placeholder="e.g. Main Academy" required></div>
+        <div class="field-group"><label class="field-label">City (optional)</label><input class="fi" name="city" placeholder="e.g. Pune"></div>
+        <div class="field-group"><label class="field-label" style="opacity:0">Go</label><button class="btn-add" type="submit"><i data-lucide="plus"></i> Add Academy</button></div>
       </div>
     </form>
   </div>
 </div>
-
-<!-- Academy List -->
-<div class="card glass border-0 shadow-sm">
-  <div class="card-body pb-0 d-flex justify-content-between align-items-center">
-    <h5 class="fw-bold mb-0">📋 Academies</h5>
-    <span class="text-muted small">Total: {{ academies|length }}</span>
+<div class="section" style="animation:fadeUp .4s .1s cubic-bezier(.22,1,.36,1) both;">
+  <div class="section-header">
+    <div><div class="section-title">Academies</div><div class="section-sub">All registered academies. Deleting detaches all linked users.</div></div>
+    <span class="badge-pill"><i data-lucide="list"></i> {{ academies|length }} total</span>
   </div>
-
-  <div class="table-responsive">
-    <table class="table align-middle mb-0">
-      <thead class="table-light">
-        <tr>
-          <th style="width:80px;">ID</th>
-          <th>Name</th>
-          <th style="width:220px;">City</th>
-          <th class="text-end" style="width:140px;">Action</th>
-        </tr>
-      </thead>
-
+  <div style="overflow-x:auto;padding-top:16px;">
+    <table class="dt">
+      <thead><tr><th>ID</th><th>Name</th><th>City</th><th>Action</th></tr></thead>
       <tbody>
-      {% if academies|length == 0 %}
-        <tr>
-          <td colspan="4" class="text-center text-muted py-5">
-            No academies found. Create your first academy above.
-          </td>
-        </tr>
-      {% else %}
-        {% for a in academies %}
-          <tr>
-            <td class="text-muted">#{{ a.academy_id }}</td>
-
-            <td>
-              <div class="fw-semibold">{{ a.name }}</div>
-              <div class="text-muted small">Academy ID: {{ a.academy_id }}</div>
-            </td>
-
-            <td>
-              {% if a.city %}
-                <span class="badge text-bg-primary-subtle border">{{ a.city }}</span>
-              {% else %}
-                <span class="text-muted">—</span>
-              {% endif %}
-            </td>
-
-            <td class="text-end">
-              <form method="post"
-                    action="{{ url_for('admin_academies_delete', academy_id=a.academy_id) }}"
-                    onsubmit="return confirm('Delete this academy? Users will be detached from it.');">
-                <button class="btn btn-sm btn-outline-danger">Delete</button>
-              </form>
-            </td>
-          </tr>
-        {% endfor %}
-      {% endif %}
+        {% if academies|length == 0 %}
+          <tr><td colspan="4"><div class="es"><div class="ei"><i data-lucide="building-2"></i></div><div class="et">No academies yet</div><div>Create your first academy using the form above.</div></div></td></tr>
+        {% else %}
+          {% for a in academies %}
+            <tr>
+              <td style="color:var(--text-3)">#{{ a.academy_id }}</td>
+              <td><div class="an">{{ a.name }}</div><div class="am">ID: {{ a.academy_id }}</div></td>
+              <td>{% if a.city %}<span class="ctag"><i data-lucide="map-pin"></i> {{ a.city }}</span>{% else %}<span style="color:var(--text-3)">—</span>{% endif %}</td>
+              <td>
+                <form method="post" action="{{ url_for('admin_academies_delete', academy_id=a.academy_id) }}" onsubmit="return confirm('Delete this academy? Users will be detached.');">
+                  <button class="bdel" type="submit"><i data-lucide="trash-2"></i> Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        {% endif %}
       </tbody>
     </table>
   </div>
+  <div class="section-footer"><div class="fn"><i data-lucide="info"></i> Deleting an academy removes the link from all associated users and coaches.</div></div>
 </div>
 {% endblock %}
+{% block scripts %}<script>lucide.createIcons();</script>{% endblock %}
