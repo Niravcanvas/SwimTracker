@@ -45,7 +45,6 @@
     margin: 0;
   }
 
-  /* Meta badges */
   .meta-row {
     display: flex;
     flex-wrap: wrap;
@@ -79,7 +78,6 @@
     color: #7aabff;
   }
 
-  /* Edit Profile btn */
   .btn-edit-profile {
     display: inline-flex;
     align-items: center;
@@ -94,11 +92,11 @@
     text-decoration: none;
     transition: all 0.18s;
     white-space: nowrap;
+    flex-shrink: 0;
   }
   .btn-edit-profile:hover { color: var(--text-1); border-color: rgba(255,255,255,0.14); }
   .btn-edit-profile svg { width: 14px; height: 14px; }
 
-  /* Goal block */
   .goal-block {
     margin-top: 28px;
     padding-top: 24px;
@@ -186,12 +184,6 @@
     gap: 16px;
     margin-bottom: 20px;
     animation: fadeUp 0.4s 0.08s cubic-bezier(0.22,1,0.36,1) both;
-  }
-  @media (max-width: 767px) {
-    .actions-grid { grid-template-columns: 1fr; }
-  }
-  @media (min-width: 576px) and (max-width: 767px) {
-    .actions-grid { grid-template-columns: repeat(2, 1fr); }
   }
 
   .action-card {
@@ -315,14 +307,40 @@
   }
   .btn-role-admin:hover { background: rgba(245,197,66,0.18); color: var(--gold); }
   .btn-role-admin svg { width: 14px; height: 14px; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+    .hero-card { padding: 24px 20px; }
+
+    .hero-top-row {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+
+    .btn-edit-profile { width: 100%; justify-content: center; }
+
+    .hero-greeting { font-size: 1.35rem; }
+
+    .actions-grid { grid-template-columns: 1fr 1fr; }
+
+    .role-banner { flex-direction: column; align-items: flex-start; }
+    .btn-role-coach, .btn-role-admin { width: 100%; justify-content: center; }
+  }
+
+  @media (max-width: 480px) {
+    .actions-grid { grid-template-columns: 1fr; }
+    .action-arrow { opacity: 1; transform: translateX(0); }
+    .goal-empty { flex-direction: column; align-items: flex-start; }
+    .btn-set-goal { width: 100%; justify-content: center; }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- ── Hero ── -->
+<!-- Hero -->
 <div class="hero-card">
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+  <div class="hero-top-row" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
     <div>
       <h1 class="hero-greeting">
         Good to see you, <span>{{ user.name }}</span>
@@ -392,7 +410,7 @@
   {% endif %}
 </div>
 
-<!-- ── Quick Actions ── -->
+<!-- Quick Actions -->
 <div class="actions-grid">
 
   <a class="action-card" href="{{ url_for('swim') }}">
@@ -427,7 +445,7 @@
 
 </div>
 
-<!-- ── Role Banner ── -->
+<!-- Role Banner -->
 {% if user.role == "COACH" %}
   <div class="role-banner coach">
     <div class="role-banner-left">
